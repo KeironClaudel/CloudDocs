@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="CloudDocs.API/CloudDocs.API.csproj" Id="f0b121f6-d98b-4299-8393-73bc7d8f6a5e" />
+  <Project Path="CloudDocs.Application/CloudDocs.Application.csproj" />
+  <Project Path="CloudDocs.Domain/CloudDocs.Domain.csproj" />
+  <Project Path="CloudDocs.Infrastructure/CloudDocs.Infrastructure.csproj" />
+  <Project Path="CloudDocs.Tests/CloudDocs.Tests.csproj" />
+</Solution>

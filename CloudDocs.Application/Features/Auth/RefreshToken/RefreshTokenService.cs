@@ -1,0 +1,81 @@
+using CloudDocs.Application.Common.Exceptions;
+using CloudDocs.Application.Common.Interfaces.Persistence;
+using CloudDocs.Application.Common.Interfaces.Security;
+using CloudDocs.Application.Common.Interfaces.Services;
+using Microsoft.Extensions.Logging;
+using RefreshTokenEntity = CloudDocs.Domain.Entities.RefreshToken;
+
+namespace CloudDocs.Application.Features.Auth.RefreshToken;
+
+public class RefreshTokenService : IRefreshTokenService
+{
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IRefreshTokenGenerator _refreshTokenGenerator;
+    private readonly IAuditService _auditService;
+    private readonly ILogger<RefreshTokenService> _logger;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public RefreshTokenService(
+        IRefreshTokenRepository refreshTokenRepository,
+        IJwtTokenGenerator jwtTokenGenerator,
+        IRefreshTokenGenerator refreshTokenGenerator,
+        IAuditService auditService,
+        IUnitOfWork unitOfWork,
+        ILogger<RefreshTokenService> logger)
+    {
+        _refreshTokenRepository = refreshTokenRepository;
+        _jwtTokenGenerator = jwtTokenGenerator;
+        _refreshTokenGenerator = refreshTokenGenerator;
+        _auditService = auditService;
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<RefreshTokenResponse> ExecuteAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
+    {
+        var existingRefreshToken = await _refreshTokenRepository.GetValidTokenAsync(request.RefreshToken, cancellationToken);
+
+        if (existingRefreshToken is null)
+        {
+            _logger.LogWarning("Refresh token attempt failed. Invalid or expired token.");
+            throw new BadRequestException("Invalid or expired refresh token.");
+        }
+
+        var user = existingRefreshToken.User;
+
+        if (!user.IsActive)
+            throw new UnauthorizedException("User is inactive.");
+
+        existingRefreshToken.RevokedAt = DateTime.UtcNow;
+        var newRefreshTokenValue = _refreshTokenGenerator.Generate();
+
+        var newRefreshToken = new RefreshTokenEntity
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Token = newRefreshTokenValue,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var newAccessToken = _jwtTokenGenerator.GenerateToken(user.Id, user.Email, user.Role.Name);
+
+        await _auditService.LogAsync(
+            user.Id,
+            "RefreshTokenUsed",
+            "Auth",
+            "User",
+            user.Id.ToString(),
+            "Access token refreshed successfully.",
+            null,
+            cancellationToken);
+
+        _logger.LogInformation("Refresh token used successfully for user {UserId}.", user.Id);
+
+        return new RefreshTokenResponse(newAccessToken, newRefreshTokenValue);
+    }
+}

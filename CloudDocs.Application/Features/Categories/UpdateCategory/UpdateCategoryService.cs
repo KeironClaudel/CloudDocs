@@ -1,0 +1,56 @@
+using CloudDocs.Application.Common.Interfaces.Persistence;
+using CloudDocs.Application.Features.Categories.Common;
+using CloudDocs.Application.Common.Interfaces.Services;
+
+namespace CloudDocs.Application.Features.Categories.UpdateCategory;
+
+public class UpdateCategoryService : IUpdateCategoryService
+{
+    private readonly ICategoryRepository _categoryRepository;
+    private readonly IAuditService _auditService;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UpdateCategoryService(ICategoryRepository categoryRepository, IAuditService auditService, IUnitOfWork unitOfWork)
+    {
+        _categoryRepository = categoryRepository;
+        _auditService = auditService;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<CategoryResponse?> UpdateAsync(Guid id, UpdateCategoryRequest request, CancellationToken cancellationToken = default)
+    {
+        var category = await _categoryRepository.GetByIdAsync(id, cancellationToken);
+        if (category is null)
+            return null;
+
+        var normalizedRequestedName = request.Name.Trim().ToLower();
+        var nameExists = await _categoryRepository.NameExistsAsync(request.Name, cancellationToken);
+
+        if (nameExists && category.Name.Trim().ToLower() != normalizedRequestedName)
+            throw new InvalidOperationException("Category name is already in use.");
+
+        category.Name = request.Name.Trim();
+        category.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+        category.UpdatedAt = DateTime.UtcNow;
+
+        await _categoryRepository.UpdateAsync(category, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _auditService.LogAsync(
+                                    null,
+                                    "Update",
+                                    "Categories",
+                                    "Category",
+                                    category.Id.ToString(),
+                                    $"Category updated: {category.Name}",
+                                    null,
+                                    cancellationToken);
+
+        return new CategoryResponse(
+            category.Id,
+            category.Name,
+            category.Description,
+            category.IsActive,
+            category.CreatedAt);
+    }
+}
