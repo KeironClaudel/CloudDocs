@@ -6,5 +6,6 @@ public enum DocumentType
     Contract = 1,
     Permit = 2,
     Policy = 3,
-    LegalDocument = 4
+    LegalDocument = 4,
+    Other = 5
 }

@@ -3,6 +3,7 @@ using CloudDocs.Application.Features.Categories.DeactivateCategory;
 using CloudDocs.Application.Features.Categories.GetCategories;
 using CloudDocs.Application.Features.Categories.GetCategoryById;
 using CloudDocs.Application.Features.Categories.UpdateCategory;
+using CloudDocs.Application.Features.Categories.ReactivateCategory;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,19 +19,22 @@ public class CategoriesController : ControllerBase
     private readonly ICreateCategoryService _createCategoryService;
     private readonly IUpdateCategoryService _updateCategoryService;
     private readonly IDeactivateCategoryService _deactivateCategoryService;
+    private readonly IReactivateCategoryService _reactivateCategoryService;
 
     public CategoriesController(
         IGetCategoriesService getCategoriesService,
         IGetCategoryByIdService getCategoryByIdService,
         ICreateCategoryService createCategoryService,
         IUpdateCategoryService updateCategoryService,
-        IDeactivateCategoryService deactivateCategoryService)
+        IDeactivateCategoryService deactivateCategoryService,
+        IReactivateCategoryService reactivateCategoryService    )
     {
         _getCategoriesService = getCategoriesService;
         _getCategoryByIdService = getCategoryByIdService;
         _createCategoryService = createCategoryService;
         _updateCategoryService = updateCategoryService;
         _deactivateCategoryService = deactivateCategoryService;
+        _reactivateCategoryService = reactivateCategoryService;
     }
 
     [HttpGet]
@@ -76,6 +80,18 @@ public class CategoriesController : ControllerBase
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
     {
         var success = await _deactivateCategoryService.DeactivateAsync(id, cancellationToken);
+
+        if (!success)
+            return NotFound(new { message = "Category not found." });
+
+        return NoContent();
+    }
+
+    [HttpPatch("{id:guid}/reactivate")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Reactivate(Guid id, CancellationToken cancellationToken)
+    {
+        var success = await _reactivateCategoryService.ReactivateAsync(id, cancellationToken);
 
         if (!success)
             return NotFound(new { message = "Category not found." });

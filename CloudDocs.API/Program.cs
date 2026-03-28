@@ -22,11 +22,14 @@ using CloudDocs.Application.Features.Users.GetUserById;
 using CloudDocs.Application.Features.Users.GetUsers;
 using CloudDocs.Application.Features.Users.ReactivateUser;
 using CloudDocs.Application.Features.Users.UpdateUser;
+
+// Categories Features
 using CloudDocs.Application.Features.Categories.CreateCategory;
 using CloudDocs.Application.Features.Categories.GetCategoryById;
 using CloudDocs.Application.Features.Categories.GetCategories;
 using CloudDocs.Application.Features.Categories.UpdateCategory;
 using CloudDocs.Application.Features.Categories.DeactivateCategory;
+using CloudDocs.Application.Features.Categories.ReactivateCategory;
 
 // Documents Features
 using CloudDocs.Application.Features.Documents.DeactivateDocument;
@@ -155,6 +158,7 @@ builder.Services.AddScoped<IGetCategoryByIdService, GetCategoryByIdService>();
 builder.Services.AddScoped<ICreateCategoryService, CreateCategoryService>();
 builder.Services.AddScoped<IUpdateCategoryService, UpdateCategoryService>();
 builder.Services.AddScoped<IDeactivateCategoryService, DeactivateCategoryService>();
+builder.Services.AddScoped<IReactivateCategoryService, ReactivateCategoryService>();
 
 // Document services
 builder.Services.Configure<FileStorageSettings>(
@@ -194,6 +198,23 @@ builder.Services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ILogoutService, LogoutService>();
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:5173",
+                "https://localhost:5173",
+                "http://localhost:5007",
+                "https://localhost:7121"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -206,6 +227,8 @@ if (app.Environment.IsDevelopment())
 app.UseGlobalExceptionHandling();
 
 app.UseHttpsRedirection();
+
+app.UseCors("FrontendPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
