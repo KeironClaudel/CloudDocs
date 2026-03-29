@@ -4,8 +4,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CloudDocs.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configures the persistence mapping for password reset token.
+/// </summary>
 public class PasswordResetTokenConfiguration : IEntityTypeConfiguration<PasswordResetToken>
 {
+    /// <summary>
+    /// Configures the table PasswordResetTokens for EntityFramework
+    /// </summary>
+    /// <param name="builder">The builder.</param>
     public void Configure(EntityTypeBuilder<PasswordResetToken> builder)
     {
         builder.ToTable("PasswordResetTokens");

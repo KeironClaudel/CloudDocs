@@ -10,6 +10,9 @@ using Microsoft.Extensions.Options;
 
 namespace CloudDocs.Application.Features.Documents.UploadDocument;
 
+/// <summary>
+/// Provides operations for upload document.
+/// </summary>
 public class UploadDocumentService : IUploadDocumentService
 {
     private readonly ICategoryRepository _categoryRepository;
@@ -22,6 +25,18 @@ public class UploadDocumentService : IUploadDocumentService
     private readonly IAuditService _auditService;
     private readonly ILogger<UploadDocumentService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UploadDocumentService"/> class.
+    /// </summary>
+    /// <param name="categoryRepository">The category repository.</param>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="documentRepository">The document repository.</param>
+    /// <param name="fileStorageService">The file storage service.</param>
+    /// <param name="fileStorageOptions">The file storage options.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="documentVersionRepository">The document version repository.</param>
+    /// <param name="unitOfWork">The unit of work.</param>
+    /// <param name="logger">The logger.</param>
     public UploadDocumentService(
         ICategoryRepository categoryRepository,
         IUserRepository userRepository,
@@ -44,6 +59,14 @@ public class UploadDocumentService : IUploadDocumentService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Uploads.
+    /// </summary>
+    /// <param name="currentUserId">The current user id identifier.</param>
+    /// <param name="fileStream">The file content stream.</param>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the document response.</returns>
     public async Task<DocumentResponse> UploadAsync(
         Guid currentUserId,
         Stream fileStream,

@@ -8,15 +8,29 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace CloudDocs.Infrastructure.Security;
 
+/// <summary>
+/// Represents jwt token generator.
+/// </summary>
 public class JwtTokenGenerator : IJwtTokenGenerator
 {
     private readonly JwtSettings _jwtSettings;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JwtTokenGenerator"/> class.
+    /// </summary>
+    /// <param name="jwtOptions">The jwt options.</param>
     public JwtTokenGenerator(IOptions<JwtSettings> jwtOptions)
     {
         _jwtSettings = jwtOptions.Value;
     }
 
+    /// <summary>
+    /// Generates the token.
+    /// </summary>
+    /// <param name="userId">The user id identifier.</param>
+    /// <param name="email">The email.</param>
+    /// <param name="role">The role.</param>
+    /// <returns>The string value.</returns>
     public string GenerateToken(Guid userId, string email, string role)
     {
         var claims = new List<Claim>

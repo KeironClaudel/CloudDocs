@@ -4,8 +4,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CloudDocs.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configures the persistence mapping for document version.
+/// </summary>
 public class DocumentVersionConfiguration : IEntityTypeConfiguration<DocumentVersion>
 {
+    /// <summary>
+    /// Configures the table DocumentVersions for EntityFramework
+    /// </summary>
+    /// <param name="builder">The builder.</param>
     public void Configure(EntityTypeBuilder<DocumentVersion> builder)
     {
         builder.ToTable("DocumentVersions");

@@ -6,6 +6,9 @@ using CloudDocs.Application.Common.Interfaces.Services;
 
 namespace CloudDocs.Application.Features.Auth.ResetPassword;
 
+/// <summary>
+/// Provides operations for reset password.
+/// </summary>
 public class ResetPasswordService : IResetPasswordService
 {
     private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
@@ -14,6 +17,14 @@ public class ResetPasswordService : IResetPasswordService
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ResetPasswordService"/> class.
+    /// </summary>
+    /// <param name="passwordResetTokenRepository">The password reset token repository.</param>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="passwordHasher">The password hasher.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="unitOfWork">The unit of work.</param>
     public ResetPasswordService(
         IPasswordResetTokenRepository passwordResetTokenRepository,
         IUserRepository userRepository,
@@ -28,6 +39,12 @@ public class ResetPasswordService : IResetPasswordService
         _unitOfWork = unitOfWork;
     }
 
+    /// <summary>
+    /// Executes.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public async Task ExecuteAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
     {
         if (!PasswordRules.IsValid(request.NewPassword))

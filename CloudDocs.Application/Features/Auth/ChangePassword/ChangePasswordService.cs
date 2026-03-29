@@ -6,6 +6,9 @@ using CloudDocs.Application.Common.Interfaces.Services;
 
 namespace CloudDocs.Application.Features.Auth.ChangePassword;
 
+/// <summary>
+/// Provides operations for change password.
+/// </summary>
 public class ChangePasswordService : IChangePasswordService
 {
     private readonly IUserRepository _userRepository;
@@ -13,6 +16,13 @@ public class ChangePasswordService : IChangePasswordService
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChangePasswordService"/> class.
+    /// </summary>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="passwordHasher">The password hasher.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="unitOfWork">The unit of work.</param>
     public ChangePasswordService(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
@@ -25,6 +35,13 @@ public class ChangePasswordService : IChangePasswordService
         _unitOfWork = unitOfWork;
     }
 
+    /// <summary>
+    /// Executes.
+    /// </summary>
+    /// <param name="userId">The user id identifier.</param>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public async Task ExecuteAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);

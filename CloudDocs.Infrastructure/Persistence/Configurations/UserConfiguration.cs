@@ -4,8 +4,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CloudDocs.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configures the persistence mapping for user.
+/// </summary>
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {
+    /// <summary>
+    /// Configures the table Users for EntityFramework
+    /// </summary>
+    /// <param name="builder">The builder.</param>
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.ToTable("Users");

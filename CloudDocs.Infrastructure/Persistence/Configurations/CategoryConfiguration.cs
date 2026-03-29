@@ -4,8 +4,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CloudDocs.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configures the persistence mapping for category.
+/// </summary>
 public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 {
+    /// <summary>
+    /// Configures the table Categories for EntityFramework
+    /// </summary>
+    /// <param name="builder">The builder.</param>
     public void Configure(EntityTypeBuilder<Category> builder)
     {
         builder.ToTable("Categories");

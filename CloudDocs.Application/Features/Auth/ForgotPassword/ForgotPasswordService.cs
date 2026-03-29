@@ -4,6 +4,9 @@ using CloudDocs.Domain.Entities;
 
 namespace CloudDocs.Application.Features.Auth.ForgotPassword;
 
+/// <summary>
+/// Provides operations for forgot password.
+/// </summary>
 public class ForgotPasswordService : IForgotPasswordService
 {
     private readonly IUserRepository _userRepository;
@@ -11,6 +14,13 @@ public class ForgotPasswordService : IForgotPasswordService
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ForgotPasswordService"/> class.
+    /// </summary>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="passwordResetTokenRepository">The password reset token repository.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="unitOfWork">The unit of work.</param>
     public ForgotPasswordService(
         IUserRepository userRepository,
         IPasswordResetTokenRepository passwordResetTokenRepository,
@@ -23,6 +33,12 @@ public class ForgotPasswordService : IForgotPasswordService
         _unitOfWork = unitOfWork;
     }
 
+    /// <summary>
+    /// Executes.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the forgot password response.</returns>
     public async Task<ForgotPasswordResponse> ExecuteAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);

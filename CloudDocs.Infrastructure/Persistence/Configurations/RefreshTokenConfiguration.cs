@@ -4,8 +4,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CloudDocs.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configures the persistence mapping for refresh token.
+/// </summary>
 public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 {
+    /// <summary>
+    /// Configures the table RefreshTokens for EntityFramework
+    /// </summary>
+    /// <param name="builder">The builder.</param>
     public void Configure(EntityTypeBuilder<RefreshToken> builder)
     {
         builder.ToTable("RefreshTokens");

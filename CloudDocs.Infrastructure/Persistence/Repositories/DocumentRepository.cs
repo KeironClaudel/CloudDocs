@@ -6,15 +6,28 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CloudDocs.Infrastructure.Persistence.Repositories;
 
+/// <summary>
+/// Provides persistence operations for document.
+/// </summary>
 public class DocumentRepository : IDocumentRepository
 {
     private readonly AppDbContext _context;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DocumentRepository"/> class.
+    /// </summary>
+    /// <param name="context">The context.</param>
     public DocumentRepository(AppDbContext context)
     {
         _context = context;
     }
 
+    /// <summary>
+    /// Gets the item by id.
+    /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the document when available; otherwise, null.</returns>
     public async Task<Document?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Documents
@@ -23,17 +36,35 @@ public class DocumentRepository : IDocumentRepository
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
+    /// <summary>
+    /// Adds.
+    /// </summary>
+    /// <param name="document">The document.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public async Task AddAsync(Document document, CancellationToken cancellationToken = default)
     {
         await _context.Documents.AddAsync(document, cancellationToken);
     }
 
+    /// <summary>
+    /// Updates.
+    /// </summary>
+    /// <param name="document">The document.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public Task UpdateAsync(Document document, CancellationToken cancellationToken = default)
     {
         _context.Documents.Update(document);
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Searches.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the paged result of document.</returns>
     public async Task<PagedResult<Document>> SearchAsync(SearchDocumentsRequest request, CancellationToken cancellationToken = default)
     {
         var query = _context.Documents

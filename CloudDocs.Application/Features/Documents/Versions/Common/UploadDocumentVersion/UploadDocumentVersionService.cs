@@ -8,6 +8,9 @@ using Microsoft.Extensions.Options;
 
 namespace CloudDocs.Application.Features.Documents.Versions.UploadDocumentVersion;
 
+/// <summary>
+/// Provides operations for upload document version.
+/// </summary>
 public class UploadDocumentVersionService : IUploadDocumentVersionService
 {
     private readonly IDocumentRepository _documentRepository;
@@ -19,6 +22,17 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<UploadDocumentVersionService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UploadDocumentVersionService"/> class.
+    /// </summary>
+    /// <param name="documentRepository">The document repository.</param>
+    /// <param name="documentVersionRepository">The document version repository.</param>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="fileStorageService">The file storage service.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="fileStorageOptions">The file storage options.</param>
+    /// <param name="unitOfWork">The unit of work.</param>
+    /// <param name="logger">The logger.</param>
     public UploadDocumentVersionService(
         IDocumentRepository documentRepository,
         IDocumentVersionRepository documentVersionRepository,
@@ -39,6 +53,15 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Uploads.
+    /// </summary>
+    /// <param name="documentId">The document id identifier.</param>
+    /// <param name="currentUserId">The current user id identifier.</param>
+    /// <param name="fileStream">The file content stream.</param>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the document version response.</returns>
     public async Task<DocumentVersionResponse> UploadAsync(
         Guid documentId,
         Guid currentUserId,

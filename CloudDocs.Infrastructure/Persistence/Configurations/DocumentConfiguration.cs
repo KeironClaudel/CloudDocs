@@ -4,8 +4,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CloudDocs.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configures the persistence mapping for document.
+/// </summary>
 public class DocumentConfiguration : IEntityTypeConfiguration<Document>
 {
+    /// <summary>
+    /// Configures the table Documents for EntityFramework
+    /// </summary>
+    /// <param name="builder">The builder.</param>
     public void Configure(EntityTypeBuilder<Document> builder)
     {
         builder.ToTable("Documents");

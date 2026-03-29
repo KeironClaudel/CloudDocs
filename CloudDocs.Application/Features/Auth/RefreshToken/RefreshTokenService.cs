@@ -7,6 +7,9 @@ using RefreshTokenEntity = CloudDocs.Domain.Entities.RefreshToken;
 
 namespace CloudDocs.Application.Features.Auth.RefreshToken;
 
+/// <summary>
+/// Provides operations for refresh token.
+/// </summary>
 public class RefreshTokenService : IRefreshTokenService
 {
     private readonly IRefreshTokenRepository _refreshTokenRepository;
@@ -16,6 +19,15 @@ public class RefreshTokenService : IRefreshTokenService
     private readonly ILogger<RefreshTokenService> _logger;
     private readonly IUnitOfWork _unitOfWork;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RefreshTokenService"/> class.
+    /// </summary>
+    /// <param name="refreshTokenRepository">The refresh token repository.</param>
+    /// <param name="jwtTokenGenerator">The jwt token generator.</param>
+    /// <param name="refreshTokenGenerator">The refresh token generator.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="unitOfWork">The unit of work.</param>
+    /// <param name="logger">The logger.</param>
     public RefreshTokenService(
         IRefreshTokenRepository refreshTokenRepository,
         IJwtTokenGenerator jwtTokenGenerator,
@@ -32,6 +44,12 @@ public class RefreshTokenService : IRefreshTokenService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Executes.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the refresh token response.</returns>
     public async Task<RefreshTokenResponse> ExecuteAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
         var existingRefreshToken = await _refreshTokenRepository.GetValidTokenAsync(request.RefreshToken, cancellationToken);

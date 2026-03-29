@@ -7,6 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace CloudDocs.Application.Features.Auth.Login;
 
+/// <summary>
+/// Provides operations for login.
+/// </summary>
 public class LoginService : ILoginService
 {
     private readonly IUserRepository _userRepository;
@@ -18,6 +21,17 @@ public class LoginService : ILoginService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<LoginService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LoginService"/> class.
+    /// </summary>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="passwordHasher">The password hasher.</param>
+    /// <param name="jwtTokenGenerator">The jwt token generator.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="refreshTokenRepository">The refresh token repository.</param>
+    /// <param name="refreshTokenGenerator">The refresh token generator.</param>
+    /// <param name="unitOfWork">The unit of work.</param>
+    /// <param name="logger">The logger.</param>
     public LoginService(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
@@ -38,6 +52,22 @@ public class LoginService : ILoginService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Authenticates a user using email and password, enforcing security checks such as
+    /// account status, lockout policies, and failed login attempts.
+    /// Generates a JWT access token and a refresh token upon successful authentication,
+    /// and records all login attempts through audit logging.
+    /// </summary>
+    /// <param name="request">The login request containing user credentials.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>
+    /// A <see cref="LoginResponse"/> containing the access token, refresh token,
+    /// and user information upon successful authentication.
+    /// </returns>
+    /// <exception cref="UnauthorizedException">
+    /// Thrown when authentication fails due to invalid credentials, inactive user,
+    /// or account lockout.
+    /// </exception>
     public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);

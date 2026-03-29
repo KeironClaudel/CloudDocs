@@ -5,10 +5,16 @@ using FluentAssertions;
 
 namespace CloudDocs.Tests.Services.Documents;
 
+/// <summary>
+/// Contains tests for document access service.
+/// </summary>
 public class DocumentAccessServiceTests
 {
     private readonly DocumentAccessService _service = new();
 
+    /// <summary>
+    /// Verifies that can access document should return true when user is admin.
+    /// </summary>
     [Fact]
     public void CanAccessDocument_ShouldReturnTrue_WhenUserIsAdmin()
     {
@@ -34,6 +40,9 @@ public class DocumentAccessServiceTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that can access document should return true when document is internal public.
+    /// </summary>
     [Fact]
     public void CanAccessDocument_ShouldReturnTrue_WhenDocumentIsInternalPublic()
     {
@@ -58,6 +67,9 @@ public class DocumentAccessServiceTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that can access document should return false when document is admin only and user is not admin.
+    /// </summary>
     [Fact]
     public void CanAccessDocument_ShouldReturnFalse_WhenDocumentIsAdminOnly_AndUserIsNotAdmin()
     {
@@ -82,6 +94,9 @@ public class DocumentAccessServiceTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that can access document should return true when owner only and user is owner.
+    /// </summary>
     [Fact]
     public void CanAccessDocument_ShouldReturnTrue_WhenOwnerOnly_AndUserIsOwner()
     {
@@ -107,6 +122,9 @@ public class DocumentAccessServiceTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that can access document should return false when owner only and user is not owner.
+    /// </summary>
     [Fact]
     public void CanAccessDocument_ShouldReturnFalse_WhenOwnerOnly_AndUserIsNotOwner()
     {
@@ -130,6 +148,9 @@ public class DocumentAccessServiceTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that can access document should return true when department only and department matches.
+    /// </summary>
     [Fact]
     public void CanAccessDocument_ShouldReturnTrue_WhenDepartmentOnly_AndDepartmentMatches()
     {
@@ -155,6 +176,9 @@ public class DocumentAccessServiceTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that can access document should return false when department only and department does not match.
+    /// </summary>
     [Fact]
     public void CanAccessDocument_ShouldReturnFalse_WhenDepartmentOnly_AndDepartmentDoesNotMatch()
     {

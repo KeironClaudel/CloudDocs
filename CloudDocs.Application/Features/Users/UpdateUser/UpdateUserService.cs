@@ -5,12 +5,22 @@ using CloudDocs.Application.Common.Exceptions;
 
 namespace CloudDocs.Application.Features.Users.UpdateUser;
 
+/// <summary>
+/// Provides operations for update user.
+/// </summary>
 public class UpdateUserService : IUpdateUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateUserService"/> class.
+    /// </summary>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="roleRepository">The role repository.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="unitOfWork">The unit of work.</param>
     public UpdateUserService(
         IUserRepository userRepository,
         IRoleRepository roleRepository,
@@ -23,6 +33,13 @@ public class UpdateUserService : IUpdateUserService
         _unitOfWork = unitOfWork;
     }
 
+    /// <summary>
+    /// Updates.
+    /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the user response when available; otherwise, null.</returns>
     public async Task<UserResponse?> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(id, cancellationToken);

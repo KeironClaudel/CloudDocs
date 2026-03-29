@@ -10,6 +10,9 @@ using CloudDocs.Application.Features.Auth.RefreshToken;
 
 namespace CloudDocs.API.Controllers;
 
+/// <summary>
+/// Exposes endpoints for auth.
+/// </summary>
 [ApiController]
 [Route("api/auth")]
 public class AuthController : ControllerBase
@@ -21,6 +24,15 @@ public class AuthController : ControllerBase
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly ILogoutService _logoutService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuthController"/> class.
+    /// </summary>
+    /// <param name="loginService">The login service.</param>
+    /// <param name="forgotPasswordService">The forgot password service.</param>
+    /// <param name="resetPasswordService">The reset password service.</param>
+    /// <param name="changePasswordService">The change password service.</param>
+    /// <param name="refreshTokenService">The refresh token service.</param>
+    /// <param name="logoutService">The logout service.</param>
     public AuthController(
     ILoginService loginService,
     IForgotPasswordService forgotPasswordService,
@@ -37,6 +49,12 @@ public class AuthController : ControllerBase
         _logoutService = logoutService;
     }
 
+    /// <summary>
+    /// Validates user credentials and if true, returns a JWT token with user information
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
@@ -44,6 +62,12 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Processes password when the user doesn't remember it.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
@@ -51,6 +75,12 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Resets the password.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
     {
@@ -58,6 +88,12 @@ public class AuthController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Changes the password.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("change-password")]
     [Authorize]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
@@ -70,6 +106,12 @@ public class AuthController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Refreshes the token.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
     {
@@ -84,6 +126,12 @@ public class AuthController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Logs the user out.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken cancellationToken)
     {

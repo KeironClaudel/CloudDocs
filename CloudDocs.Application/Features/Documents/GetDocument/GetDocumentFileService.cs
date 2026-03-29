@@ -4,6 +4,9 @@ using CloudDocs.Domain.Entities;
 
 namespace CloudDocs.Application.Features.Documents.GetDocumentFile;
 
+/// <summary>
+/// Provides operations for get document file.
+/// </summary>
 public class GetDocumentFileService : IGetDocumentFileService
 {
     private readonly IDocumentRepository _documentRepository;
@@ -11,6 +14,13 @@ public class GetDocumentFileService : IGetDocumentFileService
     private readonly IAuditService _auditService;
     private readonly IDocumentAccessService _documentAccessService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetDocumentFileService"/> class.
+    /// </summary>
+    /// <param name="documentRepository">The document repository.</param>
+    /// <param name="fileStorageService">The file storage service.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="documentAccessService">The document access service.</param>
     public GetDocumentFileService(
         IDocumentRepository documentRepository,
         IFileStorageService fileStorageService,
@@ -23,6 +33,15 @@ public class GetDocumentFileService : IGetDocumentFileService
         _documentAccessService = documentAccessService;
     }
 
+    /// <summary>
+    /// Gets the file.
+    /// </summary>
+    /// <param name="currentUser">The current user.</param>
+    /// <param name="id">The identifier.</param>
+    /// <param name="action">The action.</param>
+    /// <param name="actorUserId">The actor user id identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the (stream?stream,string file name,string content type) when available; otherwise, null.</returns>
     public async Task<(Stream? Stream, string FileName, string ContentType)?> GetFileAsync(
         User currentUser,
         Guid id,

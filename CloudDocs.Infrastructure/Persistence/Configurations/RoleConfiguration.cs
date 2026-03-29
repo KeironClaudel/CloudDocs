@@ -4,8 +4,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CloudDocs.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configures the persistence mapping for role.
+/// </summary>
 public class RoleConfiguration : IEntityTypeConfiguration<Role>
 {
+    /// <summary>
+    /// Configures the table Roles for EntityFramework
+    /// </summary>
+    /// <param name="builder">The builder.</param>
     public void Configure(EntityTypeBuilder<Role> builder)
     {
         builder.ToTable("Roles");

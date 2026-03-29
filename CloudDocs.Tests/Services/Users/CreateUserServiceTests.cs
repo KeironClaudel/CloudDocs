@@ -9,6 +9,9 @@ using Moq;
 
 namespace CloudDocs.Tests.Services.Users;
 
+/// <summary>
+/// Contains tests for create user service.
+/// </summary>
 public class CreateUserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
@@ -17,6 +20,10 @@ public class CreateUserServiceTests
     private readonly Mock<IAuditService> _auditServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
+    /// <summary>
+    /// Verifies that create async should create user when request is valid.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task CreateAsync_ShouldCreateUser_WhenRequestIsValid()
     {
@@ -59,6 +66,10 @@ public class CreateUserServiceTests
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that create async should throw when email already exists.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task CreateAsync_ShouldThrow_WhenEmailAlreadyExists()
     {

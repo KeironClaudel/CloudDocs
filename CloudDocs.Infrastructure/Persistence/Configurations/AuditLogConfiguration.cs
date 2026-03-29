@@ -4,8 +4,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CloudDocs.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configures the persistence mapping for audit log.
+/// </summary>
 public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 {
+    /// <summary>
+    /// Configures the table AuditLogs for EntityFramework.
+    /// </summary>
+    /// <param name="builder">The builder.</param>
     public void Configure(EntityTypeBuilder<AuditLog> builder)
     {
         builder.ToTable("AuditLogs");

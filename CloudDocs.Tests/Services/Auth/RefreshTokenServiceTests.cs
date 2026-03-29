@@ -11,6 +11,9 @@ using RefreshTokenEntity = CloudDocs.Domain.Entities.RefreshToken;
 
 namespace CloudDocs.Tests.Services.Auth;
 
+/// <summary>
+/// Contains tests for refresh token service.
+/// </summary>
 public class RefreshTokenServiceTests
 {
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock = new();
@@ -30,6 +33,10 @@ public class RefreshTokenServiceTests
             NullLogger<RefreshTokenService>.Instance);
     }
 
+    /// <summary>
+    /// Verifies that execute async should throw bad request when refresh token is invalid.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteAsync_ShouldThrowBadRequest_WhenRefreshTokenIsInvalid()
     {
@@ -46,6 +53,10 @@ public class RefreshTokenServiceTests
             .WithMessage("Invalid or expired refresh token.");
     }
 
+    /// <summary>
+    /// Verifies that execute async should throw unauthorized when user is inactive.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteAsync_ShouldThrowUnauthorized_WhenUserIsInactive()
     {
@@ -80,6 +91,10 @@ public class RefreshTokenServiceTests
             .WithMessage("User is inactive.");
     }
 
+    /// <summary>
+    /// Verifies that execute async should revoke old token and create new tokens when request is valid.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteAsync_ShouldRevokeOldToken_AndCreateNewTokens_WhenRequestIsValid()
     {

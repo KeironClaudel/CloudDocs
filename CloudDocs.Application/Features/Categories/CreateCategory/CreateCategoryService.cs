@@ -6,12 +6,21 @@ using CloudDocs.Application.Common.Exceptions;
 
 namespace CloudDocs.Application.Features.Categories.CreateCategory;
 
+/// <summary>
+/// Provides operations for create category.
+/// </summary>
 public class CreateCategoryService : ICreateCategoryService
 {
     private readonly ICategoryRepository _categoryRepository;
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreateCategoryService"/> class.
+    /// </summary>
+    /// <param name="categoryRepository">The category repository.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="unitOfWork">The unit of work.</param>
     public CreateCategoryService(ICategoryRepository categoryRepository, IAuditService auditService, IUnitOfWork unitOfWork)
     {
         _categoryRepository = categoryRepository;
@@ -19,6 +28,12 @@ public class CreateCategoryService : ICreateCategoryService
         _unitOfWork = unitOfWork;
     }
 
+    /// <summary>
+    /// Creates.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the category response.</returns>
     public async Task<CategoryResponse> CreateAsync(CreateCategoryRequest request, CancellationToken cancellationToken = default)
     {
         var exists = await _categoryRepository.NameExistsAsync(request.Name, cancellationToken);

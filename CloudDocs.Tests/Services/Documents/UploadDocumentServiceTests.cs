@@ -12,6 +12,9 @@ using Moq;
 
 namespace CloudDocs.Tests.Services.Documents;
 
+/// <summary>
+/// Contains tests for upload document service.
+/// </summary>
 public class UploadDocumentServiceTests
 {
     private readonly Mock<ICategoryRepository> _categoryRepositoryMock = new();
@@ -44,6 +47,10 @@ public class UploadDocumentServiceTests
         NullLogger<UploadDocumentService>.Instance);
     }
 
+    /// <summary>
+    /// Verifies that upload async should throw bad request when file size is zero.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UploadAsync_ShouldThrowBadRequest_WhenFileSizeIsZero()
     {
@@ -67,6 +74,10 @@ public class UploadDocumentServiceTests
             .WithMessage("File is required.");
     }
 
+    /// <summary>
+    /// Verifies that upload async should throw bad request when original file name is empty.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UploadAsync_ShouldThrowBadRequest_WhenOriginalFileNameIsEmpty()
     {
@@ -90,6 +101,10 @@ public class UploadDocumentServiceTests
             .WithMessage("Original file name is required.");
     }
 
+    /// <summary>
+    /// Verifies that upload async should throw bad request when extension is not pdf.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UploadAsync_ShouldThrowBadRequest_WhenExtensionIsNotPdf()
     {
@@ -113,6 +128,10 @@ public class UploadDocumentServiceTests
             .WithMessage("Only .pdf files are allowed.");
     }
 
+    /// <summary>
+    /// Verifies that upload async should throw bad request when file exceeds max size.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UploadAsync_ShouldThrowBadRequest_WhenFileExceedsMaxSize()
     {
@@ -136,6 +155,10 @@ public class UploadDocumentServiceTests
             .WithMessage("File exceeds maximum allowed size.");
     }
 
+    /// <summary>
+    /// Verifies that upload async should throw not found when category does not exist.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UploadAsync_ShouldThrowNotFound_WhenCategoryDoesNotExist()
     {
@@ -165,6 +188,10 @@ public class UploadDocumentServiceTests
             .WithMessage("Category not found or inactive.");
     }
 
+    /// <summary>
+    /// Verifies that upload async should throw not found when user does not exist.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UploadAsync_ShouldThrowNotFound_WhenUserDoesNotExist()
     {
@@ -204,6 +231,10 @@ public class UploadDocumentServiceTests
             .WithMessage("Current user not found or inactive.");
     }
 
+    /// <summary>
+    /// Verifies that upload async should throw bad request when expiration is required but missing.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UploadAsync_ShouldThrowBadRequest_WhenExpirationIsRequiredButMissing()
     {
@@ -250,6 +281,10 @@ public class UploadDocumentServiceTests
             .WithMessage("Expiration date or pending definition is required for this document type.");
     }
 
+    /// <summary>
+    /// Verifies that upload async should create document and initial version when request is valid.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UploadAsync_ShouldCreateDocumentAndInitialVersion_WhenRequestIsValid()
     {

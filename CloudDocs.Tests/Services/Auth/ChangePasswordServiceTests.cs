@@ -9,6 +9,9 @@ using Moq;
 
 namespace CloudDocs.Tests.Services.Auth;
 
+/// <summary>
+/// Contains tests for change password service.
+/// </summary>
 public class ChangePasswordServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
@@ -25,6 +28,10 @@ public class ChangePasswordServiceTests
             _unitOfWorkMock.Object);
     }
 
+    /// <summary>
+    /// Verifies that execute async should throw not found when user does not exist.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteAsync_ShouldThrowNotFound_WhenUserDoesNotExist()
     {
@@ -42,6 +49,10 @@ public class ChangePasswordServiceTests
             .WithMessage("User not found or inactive.");
     }
 
+    /// <summary>
+    /// Verifies that execute async should throw not found when user is inactive.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteAsync_ShouldThrowNotFound_WhenUserIsInactive()
     {
@@ -67,6 +78,10 @@ public class ChangePasswordServiceTests
             .WithMessage("User not found or inactive.");
     }
 
+    /// <summary>
+    /// Verifies that execute async should throw bad request when current password is incorrect.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteAsync_ShouldThrowBadRequest_WhenCurrentPasswordIsIncorrect()
     {
@@ -96,6 +111,10 @@ public class ChangePasswordServiceTests
             .WithMessage("Current password is incorrect.");
     }
 
+    /// <summary>
+    /// Verifies that execute async should throw bad request when new password is invalid.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteAsync_ShouldThrowBadRequest_WhenNewPasswordIsInvalid()
     {
@@ -125,6 +144,10 @@ public class ChangePasswordServiceTests
             .WithMessage("New password does not meet security requirements.");
     }
 
+    /// <summary>
+    /// Verifies that execute async should update password when request is valid.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task ExecuteAsync_ShouldUpdatePassword_WhenRequestIsValid()
     {

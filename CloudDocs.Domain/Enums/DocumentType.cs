@@ -1,5 +1,8 @@
 namespace CloudDocs.Domain.Enums;
 
+/// <summary>
+/// Defines the available document type values.
+/// </summary>
 public enum DocumentType
 {
     General = 0,

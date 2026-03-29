@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CloudDocs.API.Controllers;
 
+/// <summary>
+/// Exposes endpoints for users.
+/// </summary>
 [ApiController]
 [Route("api/users")]
 [Authorize(Roles = "Admin")]
@@ -21,6 +24,15 @@ public class UsersController : ControllerBase
     private readonly IDeactivateUserService _deactivateUserService;
     private readonly IReactivateUserService _reactivateUserService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UsersController"/> class.
+    /// </summary>
+    /// <param name="getUsersService">The get users service.</param>
+    /// <param name="getUserByIdService">The get user by id service.</param>
+    /// <param name="createUserService">The create user service.</param>
+    /// <param name="updateUserService">The update user service.</param>
+    /// <param name="deactivateUserService">The deactivate user service.</param>
+    /// <param name="reactivateUserService">The reactivate user service.</param>
     public UsersController(
         IGetUsersService getUsersService,
         IGetUserByIdService getUserByIdService,
@@ -37,6 +49,11 @@ public class UsersController : ControllerBase
         _reactivateUserService = reactivateUserService;
     }
 
+    /// <summary>
+    /// Gets all items.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
@@ -44,6 +61,12 @@ public class UsersController : ControllerBase
         return Ok(users);
     }
 
+    /// <summary>
+    /// Gets the item by id.
+    /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
@@ -55,6 +78,12 @@ public class UsersController : ControllerBase
         return Ok(user);
     }
 
+    /// <summary>
+    /// Creates.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateUserRequest request, CancellationToken cancellationToken)
     {
@@ -62,6 +91,13 @@ public class UsersController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
     }
 
+    /// <summary>
+    /// Updates.
+    /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request, CancellationToken cancellationToken)
     {
@@ -71,6 +107,12 @@ public class UsersController : ControllerBase
         return Ok(updatedUser);
     }
 
+    /// <summary>
+    /// Deactivates.
+    /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPatch("{id:guid}/deactivate")]
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
     {
@@ -80,6 +122,12 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Reactivates.
+    /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPatch("{id:guid}/reactivate")]
     public async Task<IActionResult> Reactivate(Guid id, CancellationToken cancellationToken)
     {

@@ -2,8 +2,16 @@ using System.Text.RegularExpressions;
 
 namespace CloudDocs.Application.Common.Helpers;
 
+/// <summary>
+/// Provides shared password validation rules.
+/// </summary>
 public static class PasswordRules
 {
+    /// <summary>
+    /// Validates whether a password satisfies the application's security policy.
+    /// Requires a minimum length of 8 characters, including uppercase, lowercase,
+    /// numeric, and special characters.
+    /// </summary>
     public static bool IsValid(string password)
     {
         if (string.IsNullOrWhiteSpace(password))

@@ -11,6 +11,9 @@ using RefreshTokenEntity = CloudDocs.Domain.Entities.RefreshToken;
 
 namespace CloudDocs.Tests.Services.Auth;
 
+/// <summary>
+/// Contains tests for login service.
+/// </summary>
 public class LoginServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
@@ -34,6 +37,10 @@ public class LoginServiceTests
             NullLogger<LoginService>.Instance);
     }
 
+    /// <summary>
+    /// Verifies that login async should throw unauthorized when user does not exist.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task LoginAsync_ShouldThrowUnauthorized_WhenUserDoesNotExist()
     {
@@ -50,6 +57,10 @@ public class LoginServiceTests
             .WithMessage("Invalid credentials.");
     }
 
+    /// <summary>
+    /// Verifies that login async should throw unauthorized when user is inactive.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task LoginAsync_ShouldThrowUnauthorized_WhenUserIsInactive()
     {
@@ -76,6 +87,10 @@ public class LoginServiceTests
             .WithMessage("User is inactive.");
     }
 
+    /// <summary>
+    /// Verifies that login async should throw unauthorized when user is locked.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task LoginAsync_ShouldThrowUnauthorized_WhenUserIsLocked()
     {
@@ -103,6 +118,10 @@ public class LoginServiceTests
             .WithMessage("User is temporarily locked.");
     }
 
+    /// <summary>
+    /// Verifies that login async should throw unauthorized when password is invalid.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task LoginAsync_ShouldThrowUnauthorized_WhenPasswordIsInvalid()
     {
@@ -139,6 +158,10 @@ public class LoginServiceTests
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that login async should lock user when password fails five times.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task LoginAsync_ShouldLockUser_WhenPasswordFailsFiveTimes()
     {
@@ -172,6 +195,10 @@ public class LoginServiceTests
         user.FailedLoginAttempts.Should().Be(0);
     }
 
+    /// <summary>
+    /// Verifies that login async should return tokens when credentials are valid.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task LoginAsync_ShouldReturnTokens_WhenCredentialsAreValid()
     {

@@ -7,6 +7,9 @@ using CloudDocs.Application.Common.Exceptions;
 
 namespace CloudDocs.Application.Features.Users.CreateUser;
 
+/// <summary>
+/// Provides operations for create user.
+/// </summary>
 public class CreateUserService : ICreateUserService
 {
     private readonly IUserRepository _userRepository;
@@ -14,6 +17,14 @@ public class CreateUserService : ICreateUserService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreateUserService"/> class.
+    /// </summary>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="roleRepository">The role repository.</param>
+    /// <param name="passwordHasher">The password hasher.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="unitOfWork">The unit of work.</param>
     public CreateUserService(
         IUserRepository userRepository,
         IRoleRepository roleRepository,
@@ -28,6 +39,12 @@ public class CreateUserService : ICreateUserService
         _unitOfWork = unitOfWork;
     }
 
+    /// <summary>
+    /// Creates.
+    /// </summary>
+    /// <param name="request">The request data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the user response.</returns>
     public async Task<UserResponse> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
         var emailExists = await _userRepository.EmailExistsAsync(request.Email, cancellationToken);

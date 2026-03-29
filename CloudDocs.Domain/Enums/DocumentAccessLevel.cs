@@ -1,5 +1,8 @@
 namespace CloudDocs.Domain.Enums;
 
+/// <summary>
+/// Defines the available document access level values.
+/// </summary>
 public enum DocumentAccessLevel
 {
     InternalPublic = 0,

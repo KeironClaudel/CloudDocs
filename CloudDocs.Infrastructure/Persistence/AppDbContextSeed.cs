@@ -2,8 +2,16 @@ using CloudDocs.Domain.Entities;
 
 namespace CloudDocs.Infrastructure.Persistence;
 
+/// <summary>
+/// Represents app db context seed.
+/// </summary>
 public static class AppDbContextSeed
 {
+    /// <summary>
+    /// Seeds the database users for testing.
+    /// </summary>
+    /// <param name="context">The context.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public static async Task SeedAsync(AppDbContext context)
     {
         if (context.Users.Any())
