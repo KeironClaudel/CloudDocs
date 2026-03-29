@@ -40,8 +40,12 @@ public class DocumentRepository : IDocumentRepository
                     .Include(x => x.Category)
                     .Include(x => x.UploadedByUser)
                     .AsNoTracking()
-                    .Where(x => x.IsActive)
                     .AsQueryable();
+
+        if (!request.IncludeInactive)
+        {
+            query = query.Where(x => x.IsActive);
+        }
 
         if (!string.IsNullOrWhiteSpace(request.Name))
         {

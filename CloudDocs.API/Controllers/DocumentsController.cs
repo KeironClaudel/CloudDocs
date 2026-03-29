@@ -93,7 +93,7 @@ public class DocumentsController : ControllerBase
         }
     }
 
-    [HttpGet]
+    [HttpGet] 
     public async Task<IActionResult> Search(
     [FromQuery] string? name,
     [FromQuery] Guid? categoryId,
@@ -103,6 +103,7 @@ public class DocumentsController : ControllerBase
     [FromQuery] bool? expirationPendingDefinition,
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 10,
+    [FromQuery] bool includeInactive = false,
     CancellationToken cancellationToken = default)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -113,6 +114,13 @@ public class DocumentsController : ControllerBase
         if (currentUser is null)
             return Unauthorized(new { message = "User not found." });
 
+        var isAdmin = string.Equals(currentUser.Role.Name, "Admin", StringComparison.OrdinalIgnoreCase);
+
+        if (includeInactive && !isAdmin)
+        {
+            return Forbid();
+        }
+
         var request = new SearchDocumentsRequest(
             name,
             categoryId,
@@ -120,6 +128,7 @@ public class DocumentsController : ControllerBase
             year,
             documentType,
             expirationPendingDefinition,
+            includeInactive,
             page,
             pageSize);
 
