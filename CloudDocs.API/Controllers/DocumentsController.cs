@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using CloudDocs.Application.Features.Documents.Versions.GetDocumentVersions;
 using CloudDocs.Application.Features.Documents.Versions.UploadDocumentVersion;
 using CloudDocs.Application.Common.Interfaces.Persistence;
-
+using CloudDocs.Application.Features.Documents.ReactivateDocument;
 
 namespace CloudDocs.API.Controllers;
 
@@ -31,6 +31,7 @@ public class DocumentsController : ControllerBase
     private readonly IGetDocumentVersionsService _getDocumentVersionsService;
     private readonly IUploadDocumentVersionService _uploadDocumentVersionService;
     private readonly IUserRepository _userRepository;
+    private readonly IReactivateDocumentService _reactivateDocumentService;
 
     public DocumentsController(
     IUploadDocumentService uploadDocumentService,
@@ -41,7 +42,8 @@ public class DocumentsController : ControllerBase
     IGetDocumentFileService getDocumentFileService,
     IGetDocumentVersionsService getDocumentVersionsService,
     IUploadDocumentVersionService uploadDocumentVersionService,
-    IUserRepository userRepository)
+    IUserRepository userRepository,
+    IReactivateDocumentService reactivateDocumentService    )
     {
         _uploadDocumentService = uploadDocumentService;
         _searchDocumentsService = searchDocumentsService;
@@ -52,6 +54,7 @@ public class DocumentsController : ControllerBase
         _getDocumentVersionsService = getDocumentVersionsService;
         _uploadDocumentVersionService = uploadDocumentVersionService;
         _userRepository = userRepository;
+        _reactivateDocumentService = reactivateDocumentService;
     }
 
     [HttpPost("upload")]
@@ -258,5 +261,17 @@ public class DocumentsController : ControllerBase
             cancellationToken);
 
         return Ok(created);
+    }
+
+    [HttpPatch("{id:guid}/reactivate")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Reactivate(Guid id, CancellationToken cancellationToken)
+    {
+        var success = await _reactivateDocumentService.ReactivateAsync(id, cancellationToken);
+
+        if (!success)
+            return NotFound(new { message = "Document not found." });
+
+        return NoContent();
     }
 }

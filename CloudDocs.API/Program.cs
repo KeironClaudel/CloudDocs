@@ -40,6 +40,7 @@ using CloudDocs.Application.Features.Documents.SearchDocuments;
 using CloudDocs.Application.Features.Documents.UploadDocument;
 using CloudDocs.Application.Features.Documents.Versions.UploadDocumentVersion;
 using CloudDocs.Application.Features.Documents.Versions.GetDocumentVersions;
+using CloudDocs.Application.Features.Documents.ReactivateDocument;
 
 // Auditting Features
 using CloudDocs.Infrastructure.Services;
@@ -175,6 +176,7 @@ builder.Services.AddScoped<IGetDocumentFileService, GetDocumentFileService>();
 builder.Services.AddScoped<IDocumentVersionRepository, DocumentVersionRepository>();
 builder.Services.AddScoped<IGetDocumentVersionsService, GetDocumentVersionsService>();
 builder.Services.AddScoped<IUploadDocumentVersionService, UploadDocumentVersionService>();
+builder.Services.AddScoped<IReactivateDocumentService, ReactivateDocumentService>();
 
 // Document Access services
 builder.Services.AddScoped<IDocumentAccessService, DocumentAccessService>();
