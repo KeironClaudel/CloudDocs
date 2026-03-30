@@ -1,5 +1,4 @@
 using CloudDocs.Application.Common.Exceptions;
-using CloudDocs.Application.Common.Helpers;
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Security;
 using CloudDocs.Application.Common.Interfaces.Services;
@@ -53,8 +52,8 @@ public class ChangePasswordService : IChangePasswordService
         if (!isCurrentPasswordValid)
             throw new BadRequestException("Current password is incorrect.");
 
-        if (!PasswordRules.IsValid(request.NewPassword))
-            throw new BadRequestException("New password does not meet security requirements.");
+        if (_passwordHasher.Verify(request.NewPassword, user.PasswordHash))
+            throw new BadRequestException("New password must be different from the current password.");
 
         user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
         user.UpdatedAt = DateTime.UtcNow;

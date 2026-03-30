@@ -1,9 +1,9 @@
+using CloudDocs.Application.Common.Exceptions;
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Security;
+using CloudDocs.Application.Common.Interfaces.Services;
 using CloudDocs.Application.Features.Users.Common;
 using CloudDocs.Domain.Entities;
-using CloudDocs.Application.Common.Interfaces.Services;
-using CloudDocs.Application.Common.Exceptions;
 
 namespace CloudDocs.Application.Features.Users.CreateUser;
 
@@ -53,7 +53,7 @@ public class CreateUserService : ICreateUserService
 
         var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
         if (role is null)
-            throw new BadRequestException("Email is already in use.");
+            throw new BadRequestException("Invalid role.");
 
         var user = new User
         {

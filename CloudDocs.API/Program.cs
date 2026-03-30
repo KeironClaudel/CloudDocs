@@ -15,6 +15,9 @@ using CloudDocs.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+
+
+
 // Users Features
 using CloudDocs.Application.Features.Users.CreateUser;
 using CloudDocs.Application.Features.Users.DeactivateUser;
@@ -49,8 +52,10 @@ using CloudDocs.Application.Features.AuditLogs.GetAuditLogs;
 using CloudDocs.Application.Features.Auth.ForgotPassword;
 using CloudDocs.Application.Features.Auth.ResetPassword;
 using CloudDocs.Application.Features.Auth.ChangePassword;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
-// Tpken management features
+// Token management features
 using CloudDocs.Application.Features.Auth.RefreshToken;
 using CloudDocs.Application.Features.Auth.Logout;
 
@@ -131,6 +136,9 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+
 // Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -191,6 +199,7 @@ builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepo
 builder.Services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
 builder.Services.AddScoped<IResetPasswordService, ResetPasswordService>();
 builder.Services.AddScoped<IChangePasswordService, ChangePasswordService>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
 
 // Token management services
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();

@@ -1,5 +1,4 @@
 using CloudDocs.Application.Common.Exceptions;
-using CloudDocs.Application.Common.Helpers;
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Security;
 using CloudDocs.Application.Common.Interfaces.Services;
@@ -47,9 +46,6 @@ public class ResetPasswordService : IResetPasswordService
     /// <returns>A task that represents the asynchronous operation.</returns>
     public async Task ExecuteAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
     {
-        if (!PasswordRules.IsValid(request.NewPassword))
-            throw new BadRequestException("New password does not meet security requirements.");
-
         var resetToken = await _passwordResetTokenRepository.GetValidTokenAsync(request.Token, cancellationToken);
 
         if (resetToken is null)
