@@ -3,10 +3,11 @@ using System.Text;
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using Microsoft.EntityFrameworkCore;
 using CloudDocs.Application.Common.Interfaces.Services;
+using CloudDocs.Application.Common.Models;
+using CloudDocs.Infrastructure.Services;
 
 // Auth Imports
 using CloudDocs.Application.Common.Interfaces.Security;
-using CloudDocs.Application.Common.Models;
 using CloudDocs.Application.Features.Auth.Login;
 using CloudDocs.Infrastructure.Persistence;
 using CloudDocs.Infrastructure.Persistence.Repositories;
@@ -14,7 +15,6 @@ using CloudDocs.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
 // Users Features
 using CloudDocs.Application.Features.Users.CreateUser;
 using CloudDocs.Application.Features.Users.DeactivateUser;
@@ -43,7 +43,6 @@ using CloudDocs.Application.Features.Documents.Versions.GetDocumentVersions;
 using CloudDocs.Application.Features.Documents.ReactivateDocument;
 
 // Auditting Features
-using CloudDocs.Infrastructure.Services;
 using CloudDocs.Application.Features.AuditLogs.GetAuditLogs;
 
 // Password management features
@@ -199,6 +198,12 @@ builder.Services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
 
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ILogoutService, LogoutService>();
+
+// Email service
+builder.Services.Configure<FrontendSettings>(
+    builder.Configuration.GetSection(FrontendSettings.SectionName));
+
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // CORS
 builder.Services.AddCors(options =>

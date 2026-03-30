@@ -28,4 +28,10 @@ public interface IDocumentVersionRepository
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the int.</returns>
     Task<int> GetNextVersionNumberAsync(Guid documentId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves a specific document version by its unique identifier,
+    /// including related document and user metadata.
+    /// </summary>
+    Task<DocumentVersion?> GetByIdAsync(Guid versionId, CancellationToken cancellationToken = default);
 }

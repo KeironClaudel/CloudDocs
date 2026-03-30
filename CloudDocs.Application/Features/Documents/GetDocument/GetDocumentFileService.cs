@@ -1,6 +1,7 @@
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Services;
 using CloudDocs.Domain.Entities;
+using System.Reflection.Metadata;
 
 namespace CloudDocs.Application.Features.Documents.GetDocumentFile;
 
@@ -13,6 +14,7 @@ public class GetDocumentFileService : IGetDocumentFileService
     private readonly IFileStorageService _fileStorageService;
     private readonly IAuditService _auditService;
     private readonly IDocumentAccessService _documentAccessService;
+    private readonly IDocumentVersionRepository _documentVersionRepository;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetDocumentFileService"/> class.
@@ -25,51 +27,89 @@ public class GetDocumentFileService : IGetDocumentFileService
         IDocumentRepository documentRepository,
         IFileStorageService fileStorageService,
         IAuditService auditService,
-        IDocumentAccessService documentAccessService)
+        IDocumentAccessService documentAccessService,
+        IDocumentVersionRepository documentVersionRepository)
     {
         _documentRepository = documentRepository;
         _fileStorageService = fileStorageService;
         _auditService = auditService;
         _documentAccessService = documentAccessService;
+        _documentVersionRepository = documentVersionRepository;
     }
 
     /// <summary>
     /// Gets the file.
     /// </summary>
     /// <param name="currentUser">The current user.</param>
-    /// <param name="id">The identifier.</param>
+    /// <param name="documentId">The document identifier.</param>
     /// <param name="action">The action.</param>
     /// <param name="actorUserId">The actor user id identifier.</param>
+    /// /// <param name="versionId">The document version identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the (stream?stream,string file name,string content type) when available; otherwise, null.</returns>
     public async Task<(Stream? Stream, string FileName, string ContentType)?> GetFileAsync(
         User currentUser,
-        Guid id,
+        Guid documentId,
         string action,
         Guid? actorUserId = null,
+        Guid? versionId = null,
         CancellationToken cancellationToken = default)
     {
-        var document = await _documentRepository.GetByIdAsync(id, cancellationToken);
+        var document = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
         if (document is null)
             return null;
 
         if (!_documentAccessService.CanAccessDocument(currentUser, document))
             return null;
 
-        var stream = await _fileStorageService.GetFileAsync(document.StoragePath, cancellationToken);
+        string storagePath;
+        string fileName;
+        string contentType;
+
+        if (versionId.HasValue)
+        {
+            var version = await _documentVersionRepository.GetByIdAsync(versionId.Value, cancellationToken);
+            if (version is null)
+                return null;
+
+            if (version.DocumentId != documentId)
+                return null;
+
+            storagePath = version.StoragePath;
+            fileName = $"{document.OriginalFileName}_v{version.VersionNumber}{document.FileExtension}";
+            contentType = document.ContentType;
+
+            await _auditService.LogAsync(
+                actorUserId,
+                action,
+                "Documents",
+                "DocumentVersion",
+                version.Id.ToString(),
+                $"{action} document version {version.VersionNumber} for: {document.OriginalFileName}{document.FileExtension}",
+                null,
+                cancellationToken);
+        }
+        else
+        {
+            storagePath = document.StoragePath;
+            fileName = $"{document.OriginalFileName}{document.FileExtension}";
+            contentType = document.ContentType;
+
+            await _auditService.LogAsync(
+                actorUserId,
+                action,
+                "Documents",
+                "Document",
+                document.Id.ToString(),
+                $"{action} document: {document.OriginalFileName}{document.FileExtension}",
+                null,
+                cancellationToken);
+        }
+
+        var stream = await _fileStorageService.GetFileAsync(storagePath, cancellationToken);
         if (stream is null)
             return null;
 
-        await _auditService.LogAsync(
-            actorUserId,
-            action,
-            "Documents",
-            "Document",
-            document.Id.ToString(),
-            $"{action} document: {document.OriginalFileName}{document.FileExtension}",
-            null,
-            cancellationToken);
-
-        return (stream, $"{document.OriginalFileName}{document.FileExtension}", document.ContentType);
+        return (stream, fileName, contentType);
     }
 }

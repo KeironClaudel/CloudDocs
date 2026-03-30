@@ -61,4 +61,19 @@ public class DocumentVersionRepository : IDocumentVersionRepository
 
         return (lastVersion ?? 0) + 1;
     }
+
+    /// <summary>
+    /// Retrieves a specific document version by its identifier.
+    /// Includes related document, category, and user information for access validation.
+    /// </summary>
+    public async Task<DocumentVersion?> GetByIdAsync(Guid versionId, CancellationToken cancellationToken = default)
+    {
+        return await _context.DocumentVersions
+            .Include(x => x.Document)
+                .ThenInclude(d => d.Category)
+            .Include(x => x.Document)
+                .ThenInclude(d => d.UploadedByUser)
+            .Include(x => x.UploadedByUser)
+            .FirstOrDefaultAsync(x => x.Id == versionId, cancellationToken);
+    }
 }

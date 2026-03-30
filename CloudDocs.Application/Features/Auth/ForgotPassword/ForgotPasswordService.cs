@@ -1,6 +1,8 @@
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Services;
+using CloudDocs.Application.Common.Models;
 using CloudDocs.Domain.Entities;
+using Microsoft.Extensions.Options;
 
 namespace CloudDocs.Application.Features.Auth.ForgotPassword;
 
@@ -13,6 +15,8 @@ public class ForgotPasswordService : IForgotPasswordService
     private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailService _emailService;
+    private readonly FrontendSettings _frontendSettings;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ForgotPasswordService"/> class.
@@ -25,12 +29,16 @@ public class ForgotPasswordService : IForgotPasswordService
         IUserRepository userRepository,
         IPasswordResetTokenRepository passwordResetTokenRepository,
         IAuditService auditService,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IEmailService emailService,
+        IOptions<FrontendSettings> frontendOptions)
     {
         _userRepository = userRepository;
         _passwordResetTokenRepository = passwordResetTokenRepository;
         _auditService = auditService;
         _unitOfWork = unitOfWork;
+        _emailService = emailService;
+        _frontendSettings = frontendOptions.Value;
     }
 
     /// <summary>
@@ -56,8 +64,7 @@ public class ForgotPasswordService : IForgotPasswordService
                 cancellationToken);
 
             return new ForgotPasswordResponse(
-                "If the account exists, a password reset link will be sent.",
-                null);
+                "If the account exists, a password reset link will be sent.");
         }
 
         var rawToken = Guid.NewGuid().ToString("N");
@@ -73,18 +80,35 @@ public class ForgotPasswordService : IForgotPasswordService
         await _passwordResetTokenRepository.AddAsync(resetToken, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        var resetLink = $"{_frontendSettings.BaseUrl}/reset-password?token={rawToken}";
+
+        var subject = "CloudDocs Password Reset";
+        var body = $"""
+            Hello {user.FullName},
+
+            We received a request to reset your password.
+
+            Use the following link to set a new password:
+            {resetLink}
+
+            This link will expire in 30 minutes.
+
+            If you did not request this change, you can safely ignore this email.
+            """;
+
+        await _emailService.SendAsync(user.Email, subject, body, cancellationToken);
+
         await _auditService.LogAsync(
             user.Id,
             "ForgotPasswordRequested",
             "Auth",
             "User",
             user.Id.ToString(),
-            "Password reset token generated.",
+            "Password reset token generated and email sent.",
             null,
             cancellationToken);
 
         return new ForgotPasswordResponse(
-            "Password reset token generated successfully.",
-            rawToken);
+            "If the account exists, a password reset link will be sent.");
     }
 }

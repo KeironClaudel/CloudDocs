@@ -199,11 +199,15 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Previews.
     /// </summary>
-    /// <param name="id">The identifier.</param>
+    /// <param name="id">The document identifier.</param>
+    /// /// <param name="versionId">The documents version identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpGet("{id:guid}/preview")]
-    public async Task<IActionResult> Preview(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Preview(
+    Guid id,
+    [FromQuery] Guid? versionId = null,
+    CancellationToken cancellationToken = default)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!Guid.TryParse(userIdClaim, out var userId))
@@ -213,7 +217,14 @@ public class DocumentsController : ControllerBase
         if (currentUser is null)
             return Unauthorized(new { message = "User not found." });
 
-        var file = await _getDocumentFileService.GetFileAsync(currentUser, id, "Preview", userId, cancellationToken);
+        var file = await _getDocumentFileService.GetFileAsync(
+            currentUser,
+            id,
+            "Preview",
+            userId,
+            versionId,
+            cancellationToken);
+
         if (file is null)
             return NotFound(new { message = "Document file not found or access denied." });
 
@@ -223,11 +234,15 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Downloads.
     /// </summary>
-    /// <param name="id">The identifier.</param>
+    /// <param name="id">The document identifier.</param>
+    /// /// <param name="versionId">The document version identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpGet("{id:guid}/download")]
-    public async Task<IActionResult> Download(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Download(
+    Guid id,
+    [FromQuery] Guid? versionId = null,
+    CancellationToken cancellationToken = default)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!Guid.TryParse(userIdClaim, out var userId))
@@ -237,7 +252,14 @@ public class DocumentsController : ControllerBase
         if (currentUser is null)
             return Unauthorized(new { message = "User not found." });
 
-        var file = await _getDocumentFileService.GetFileAsync(currentUser, id, "Download", userId, cancellationToken);
+        var file = await _getDocumentFileService.GetFileAsync(
+            currentUser,
+            id,
+            "Download",
+            userId,
+            versionId,
+            cancellationToken);
+
         if (file is null)
             return NotFound(new { message = "Document file not found or access denied." });
 
