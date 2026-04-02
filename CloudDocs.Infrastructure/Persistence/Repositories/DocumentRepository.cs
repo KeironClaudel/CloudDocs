@@ -33,6 +33,7 @@ public class DocumentRepository : IDocumentRepository
         return await _context.Documents
             .Include(x => x.Category)
             .Include(x => x.UploadedByUser)
+            .Include(x => x.DocumentType)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
@@ -69,6 +70,7 @@ public class DocumentRepository : IDocumentRepository
     {
         var query = _context.Documents
                     .Include(x => x.Category)
+                    .Include(x => x.DocumentType)
                     .Include(x => x.UploadedByUser)
                     .AsNoTracking()
                     .AsQueryable();
@@ -93,8 +95,8 @@ public class DocumentRepository : IDocumentRepository
         if (request.Year.HasValue)
             query = query.Where(x => x.Year == request.Year.Value);
 
-        if (request.DocumentType.HasValue)
-            query = query.Where(x => x.DocumentType == request.DocumentType.Value);
+        if (request.DocumentTypeId.HasValue)
+            query = query.Where(x => x.DocumentTypeId == request.DocumentTypeId.Value);
 
         if (request.ExpirationPendingDefinition.HasValue)
             query = query.Where(x => x.ExpirationDatePendingDefinition == request.ExpirationPendingDefinition.Value);

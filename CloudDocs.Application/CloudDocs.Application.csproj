@@ -16,8 +16,4 @@
     <ProjectReference Include="..\CloudDocs.Domain\CloudDocs.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Common\NewFolder\" />
-  </ItemGroup>
-
 </Project>

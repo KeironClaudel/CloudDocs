@@ -18,7 +18,7 @@ public class UploadDocumentFormRequest
     /// <summary>
     /// Gets or sets the document type.
     /// </summary>
-    public DocumentType DocumentType { get; set; }
+    public Guid DocumentTypeId { get; set; }
     /// <summary>
     /// Gets or sets the expiration date.
     /// </summary>

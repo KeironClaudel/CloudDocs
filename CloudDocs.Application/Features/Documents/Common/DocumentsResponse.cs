@@ -17,7 +17,8 @@ namespace CloudDocs.Application.Features.Documents.Common;
 /// <param name="UploadedByUserName">The uploaded by user name.</param>
 /// <param name="Month">The month.</param>
 /// <param name="Year">The year.</param>
-/// <param name="DocumentType">The document type.</param>
+/// <param name="DocumentTypeId">The document type Id.</param>
+/// <param name="DocumentTypeName">The document type name.</param>
 /// <param name="ExpirationDate">The expiration date.</param>
 /// <param name="ExpirationDatePendingDefinition">The expiration date pending definition.</param>
 /// <param name="AccessLevel">The access level.</param>
@@ -37,7 +38,8 @@ public sealed record DocumentResponse(
     string UploadedByUserName,
     int Month,
     int Year,
-    DocumentType DocumentType,
+    Guid DocumentTypeId,
+    string DocumentTypeName,
     DateTime? ExpirationDate,
     bool ExpirationDatePendingDefinition,
     DocumentAccessLevel AccessLevel,

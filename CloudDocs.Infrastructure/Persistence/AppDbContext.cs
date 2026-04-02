@@ -49,6 +49,10 @@ public class AppDbContext : DbContext
     /// Gets the refresh tokens.
     /// </summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    /// <summary>
+    /// Gets the Document Types.
+    /// </summary>
+    public DbSet<DocumentTypeEntity> DocumentTypes => Set<DocumentTypeEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

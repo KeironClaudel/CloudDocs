@@ -31,8 +31,13 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.HasIndex(x => x.Month);
         builder.HasIndex(x => x.Year);
 
-        builder.HasIndex(x => x.DocumentType);
+        builder.HasOne(x => x.DocumentType)
+                            .WithMany(x => x.Documents)
+                            .HasForeignKey(x => x.DocumentTypeId)
+                            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(x => x.IsActive);
+        builder.HasIndex(x => x.DocumentTypeId);
 
         builder.HasOne(x => x.Category)
             .WithMany(c => c.Documents)

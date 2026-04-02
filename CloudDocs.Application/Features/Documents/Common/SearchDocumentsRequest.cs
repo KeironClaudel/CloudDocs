@@ -19,7 +19,7 @@ public sealed record SearchDocumentsRequest(
     Guid? CategoryId,
     int? Month,
     int? Year,
-    DocumentType? DocumentType,
+    Guid? DocumentTypeId,
     bool? ExpirationPendingDefinition,
     bool IncludeInactive = false,
     int Page = 1,

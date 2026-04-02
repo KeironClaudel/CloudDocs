@@ -21,6 +21,7 @@ public class UploadDocumentService : IUploadDocumentService
     private readonly IFileStorageService _fileStorageService;
     private readonly FileStorageSettings _fileStorageSettings;
     private readonly IDocumentVersionRepository _documentVersionRepository;
+    private readonly IDocumentTypeRepository _documentTypeRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditService _auditService;
     private readonly ILogger<UploadDocumentService> _logger;
@@ -35,6 +36,7 @@ public class UploadDocumentService : IUploadDocumentService
     /// <param name="fileStorageOptions">The file storage options.</param>
     /// <param name="auditService">The audit service.</param>
     /// <param name="documentVersionRepository">The document version repository.</param>
+    /// <param name="documentTypeRepository">The document type repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
     /// <param name="logger">The logger.</param>
     public UploadDocumentService(
@@ -45,6 +47,7 @@ public class UploadDocumentService : IUploadDocumentService
         IOptions<FileStorageSettings> fileStorageOptions,
         IAuditService auditService,
         IDocumentVersionRepository documentVersionRepository,
+        IDocumentTypeRepository documentTypeRepository,
         IUnitOfWork unitOfWork,
         ILogger<UploadDocumentService> logger)
     {
@@ -55,6 +58,7 @@ public class UploadDocumentService : IUploadDocumentService
         _fileStorageSettings = fileStorageOptions.Value;
         _auditService = auditService;
         _documentVersionRepository = documentVersionRepository;
+        _documentTypeRepository = documentTypeRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -99,18 +103,25 @@ public class UploadDocumentService : IUploadDocumentService
         if (category is null || !category.IsActive)
             throw new NotFoundException("Category not found or inactive.");
 
+        var documentType = await _documentTypeRepository.GetByIdAsync(request.DocumentTypeId, cancellationToken);
+        if (documentType is null || !documentType.IsActive)
+            throw new NotFoundException("Document type not found or inactive.");
+
         var user = await _userRepository.GetByIdAsync(currentUserId, cancellationToken);
         if (user is null || !user.IsActive)
             throw new NotFoundException("Current user not found or inactive.");
 
-        var requiresExpiration =
-            request.DocumentType == DocumentType.Contract ||
-            request.DocumentType == DocumentType.Permit ||
-            request.DocumentType == DocumentType.Policy ||
-            request.DocumentType == DocumentType.LegalDocument;
+        //var normalizedTypeName = documentType.Name.Trim().ToLower();
 
-        if (requiresExpiration && !request.ExpirationDate.HasValue && !request.ExpirationDatePendingDefinition)
-            throw new BadRequestException("Expiration date or pending definition is required for this document type.");
+        //var requiresExpiration =
+        //            normalizedTypeName == "contract" ||
+        //            normalizedTypeName == "permit" ||
+        //            normalizedTypeName == "policy" ||
+        //            normalizedTypeName == "legal document";
+
+
+        //if (requiresExpiration && !request.ExpirationDate.HasValue && !request.ExpirationDatePendingDefinition)
+        //    throw new BadRequestException("Expiration date or pending definition is required for this document type.");
 
         var sanitizedOriginalName = Path.GetFileNameWithoutExtension(request.OriginalFileName).Trim();
 
@@ -134,7 +145,8 @@ public class UploadDocumentService : IUploadDocumentService
             UploadedByUserId = user.Id,
             Month = DateTime.UtcNow.Month,
             Year = DateTime.UtcNow.Year,
-            DocumentType = request.DocumentType,
+            DocumentTypeId = documentType.Id,
+            DocumentType = documentType,
             ExpirationDate = request.ExpirationDate,
             ExpirationDatePendingDefinition = request.ExpirationDatePendingDefinition,
             AccessLevel = request.AccessLevel,
@@ -188,7 +200,8 @@ public class UploadDocumentService : IUploadDocumentService
             user.FullName,
             document.Month,
             document.Year,
-            document.DocumentType,
+            document.DocumentTypeId,
+            documentType.Name,
             document.ExpirationDate,
             document.ExpirationDatePendingDefinition,
             document.AccessLevel,

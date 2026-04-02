@@ -44,6 +44,12 @@ using CloudDocs.Application.Features.Documents.UploadDocument;
 using CloudDocs.Application.Features.Documents.Versions.UploadDocumentVersion;
 using CloudDocs.Application.Features.Documents.Versions.GetDocumentVersions;
 using CloudDocs.Application.Features.Documents.ReactivateDocument;
+using CloudDocs.Application.Features.DocumentTypes.GetDocumentTypes;
+using CloudDocs.Application.Features.DocumentTypes.GetDocumentTypeById;
+using CloudDocs.Application.Features.DocumentTypes.CreateDocumentType;
+using CloudDocs.Application.Features.DocumentTypes.UpdateDocumentType;
+using CloudDocs.Application.Features.DocumentTypes.DeactivateDocumentType;
+using CloudDocs.Application.Features.DocumentTypes.ReactivateDocumentType;
 
 // Auditting Features
 using CloudDocs.Application.Features.AuditLogs.GetAuditLogs;
@@ -184,6 +190,14 @@ builder.Services.AddScoped<IDocumentVersionRepository, DocumentVersionRepository
 builder.Services.AddScoped<IGetDocumentVersionsService, GetDocumentVersionsService>();
 builder.Services.AddScoped<IUploadDocumentVersionService, UploadDocumentVersionService>();
 builder.Services.AddScoped<IReactivateDocumentService, ReactivateDocumentService>();
+builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
+
+builder.Services.AddScoped<IGetDocumentTypesService, GetDocumentTypesService>();
+builder.Services.AddScoped<IGetDocumentTypeByIdService, GetDocumentTypeByIdService>();
+builder.Services.AddScoped<ICreateDocumentTypeService, CreateDocumentTypeService>();
+builder.Services.AddScoped<IUpdateDocumentTypeService, UpdateDocumentTypeService>();
+builder.Services.AddScoped<IDeactivateDocumentTypeService, DeactivateDocumentTypeService>();
+builder.Services.AddScoped<IReactivateDocumentTypeService, ReactivateDocumentTypeService>();
 
 // Document Access services
 builder.Services.AddScoped<IDocumentAccessService, DocumentAccessService>();

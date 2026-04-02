@@ -63,7 +63,8 @@ public class Document : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the document type.
     /// </summary>
-    public DocumentType DocumentType { get; set; } = DocumentType.General;
+    public Guid DocumentTypeId { get; set; }
+    public DocumentTypeEntity DocumentType { get; set; } = null!;
     /// <summary>
     /// Gets or sets the expiration date.
     /// </summary>

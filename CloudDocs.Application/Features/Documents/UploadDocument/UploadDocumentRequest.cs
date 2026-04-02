@@ -19,7 +19,7 @@ public sealed record UploadDocumentRequest(
     string ContentType,
     long FileSize,
     Guid CategoryId,
-    DocumentType DocumentType,
+    Guid DocumentTypeId,
     DateTime? ExpirationDate,
     bool ExpirationDatePendingDefinition,
     DocumentAccessLevel AccessLevel,
