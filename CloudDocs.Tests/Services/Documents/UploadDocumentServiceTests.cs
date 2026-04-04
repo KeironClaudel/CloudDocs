@@ -22,6 +22,7 @@ public class UploadDocumentServiceTests
     private readonly Mock<IDocumentRepository> _documentRepositoryMock = new();
     private readonly Mock<IDocumentVersionRepository> _documentVersionRepositoryMock = new();
     private readonly Mock<IFileStorageService> _fileStorageServiceMock = new();
+    private readonly Mock<IDocumentTypeRepository> _documentTypeRepositoryMock = new();
     private readonly Mock<IAuditService> _auditServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
@@ -43,6 +44,7 @@ public class UploadDocumentServiceTests
         options,
         _auditServiceMock.Object,
         _documentVersionRepositoryMock.Object,
+        _documentTypeRepositoryMock.Object,
         _unitOfWorkMock.Object,
         NullLogger<UploadDocumentService>.Instance);
     }
@@ -59,7 +61,7 @@ public class UploadDocumentServiceTests
             "application/pdf",
             0,
             Guid.NewGuid(),
-            DocumentType.General,
+            Guid.NewGuid(),
             null,
             false,
             DocumentAccessLevel.InternalPublic,
@@ -86,7 +88,7 @@ public class UploadDocumentServiceTests
             "application/pdf",
             100,
             Guid.NewGuid(),
-            DocumentType.General,
+            Guid.NewGuid(),
             null,
             false,
             DocumentAccessLevel.InternalPublic,
@@ -113,7 +115,7 @@ public class UploadDocumentServiceTests
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             100,
             Guid.NewGuid(),
-            DocumentType.General,
+            Guid.NewGuid(),
             null,
             false,
             DocumentAccessLevel.InternalPublic,
@@ -140,7 +142,7 @@ public class UploadDocumentServiceTests
             "application/pdf",
             _fileStorageSettings.MaxFileSizeInBytes + 1,
             Guid.NewGuid(),
-            DocumentType.General,
+            Guid.NewGuid(),
             null,
             false,
             DocumentAccessLevel.InternalPublic,
@@ -169,7 +171,7 @@ public class UploadDocumentServiceTests
             "application/pdf",
             100,
             categoryId,
-            DocumentType.General,
+            Guid.NewGuid(),
             null,
             false,
             DocumentAccessLevel.InternalPublic,
@@ -203,7 +205,7 @@ public class UploadDocumentServiceTests
             "application/pdf",
             100,
             categoryId,
-            DocumentType.General,
+            Guid.NewGuid(),
             null,
             false,
             DocumentAccessLevel.InternalPublic,
@@ -246,7 +248,8 @@ public class UploadDocumentServiceTests
             "application/pdf",
             100,
             categoryId,
-            DocumentType.Contract,
+            // use the contract document type id from db
+            Guid.NewGuid(),
             null,
             false,
             DocumentAccessLevel.InternalPublic,
@@ -290,13 +293,14 @@ public class UploadDocumentServiceTests
     {
         var categoryId = Guid.NewGuid();
         var userId = Guid.NewGuid();
+        var documentTypeId = Guid.NewGuid();
 
         var request = new UploadDocumentRequest(
             "contract.pdf",
             "application/pdf",
             100,
             categoryId,
-            DocumentType.Contract,
+            documentTypeId,
             new DateTime(2026, 12, 31),
             false,
             DocumentAccessLevel.InternalPublic,
@@ -318,6 +322,13 @@ public class UploadDocumentServiceTests
             Role = new Role { Name = "Admin" }
         };
 
+        var documentTypeEntity = new CloudDocs.Domain.Entities.DocumentTypeEntity
+        {
+            Id = documentTypeId,
+            Name = "Contract",
+            IsActive = true
+        };
+
         _categoryRepositoryMock
             .Setup(x => x.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(category);
@@ -325,6 +336,10 @@ public class UploadDocumentServiceTests
         _userRepositoryMock
             .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
+
+        _documentTypeRepositoryMock
+            .Setup(x => x.GetByIdAsync(documentTypeId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(documentTypeEntity);
 
         _fileStorageServiceMock
             .Setup(x => x.SaveFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -340,7 +355,8 @@ public class UploadDocumentServiceTests
         result.CategoryName.Should().Be("Contracts");
         result.UploadedByUserId.Should().Be(userId);
         result.UploadedByUserName.Should().Be("Keiron");
-        result.DocumentType.Should().Be(DocumentType.Contract);
+        result.DocumentTypeId.Should().Be(documentTypeId);
+        result.DocumentTypeName.Should().Be("Contract");
         result.ExpirationDate.Should().Be(new DateTime(2026, 12, 31));
         result.AccessLevel.Should().Be(DocumentAccessLevel.InternalPublic);
         result.Department.Should().Be("Finance");
