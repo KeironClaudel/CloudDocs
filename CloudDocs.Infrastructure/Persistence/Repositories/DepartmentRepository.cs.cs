@@ -35,4 +35,23 @@ public class DepartmentRepository : IDepartmentRepository
         return await _context.Departments
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
+
+    public async Task<bool> NameExistsAsync(string name, CancellationToken cancellationToken = default)
+    {
+        var normalizedName = name.Trim().ToLower();
+
+        return await _context.Departments
+            .AnyAsync(x => x.Name.ToLower() == normalizedName, cancellationToken);
+    }
+
+    public async Task AddAsync(Department department, CancellationToken cancellationToken = default)
+    {
+        await _context.Departments.AddAsync(department, cancellationToken);
+    }
+
+    public Task UpdateAsync(Department department, CancellationToken cancellationToken = default)
+    {
+        _context.Departments.Update(department);
+        return Task.CompletedTask;
+    }
 }

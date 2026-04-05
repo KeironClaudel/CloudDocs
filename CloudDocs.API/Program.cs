@@ -1,4 +1,5 @@
 // System imports
+
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -6,12 +7,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using CloudDocs.Application.Common.Models;
 using CloudDocs.Infrastructure.Persistence;
-using CloudDocs.Infrastructure.Persistence.Repositories;
 using CloudDocs.Infrastructure.Security;
 using CloudDocs.Infrastructure.Services;
-using CloudDocs.Application.Common.Models;
-
+using CloudDocs.Infrastructure.Persistence.Repositories;
 
 // Global Error Handling Middleware
 using CloudDocs.API.Extensions;
@@ -21,19 +21,24 @@ using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Security;
 using CloudDocs.Application.Common.Interfaces.Services;
 
+// Access Level Features
+using CloudDocs.Application.Features.AccessLevels.CreateAccessLevel;
+using CloudDocs.Application.Features.AccessLevels.DeactivateAccessLevel;
+using CloudDocs.Application.Features.AccessLevels.GetAccessLevel;
+using CloudDocs.Application.Features.AccessLevels.GetAccessLevelById;
+using CloudDocs.Application.Features.AccessLevels.GetAccessLevels;
+using CloudDocs.Application.Features.AccessLevels.ReactivateAccessLevel;
+using CloudDocs.Application.Features.AccessLevels.UpdateAccessLevel;
 // Auditting Features
 using CloudDocs.Application.Features.AuditLogs.GetAuditLogs;
 using CloudDocs.Application.Features.Auth.ChangePassword;
-
 // Password management features
 using CloudDocs.Application.Features.Auth.ForgotPassword;
 using CloudDocs.Application.Features.Auth.Login;
 using CloudDocs.Application.Features.Auth.Logout;
-
 // Token management features
 using CloudDocs.Application.Features.Auth.RefreshToken;
 using CloudDocs.Application.Features.Auth.ResetPassword;
-
 // Categories Features
 using CloudDocs.Application.Features.Categories.CreateCategory;
 using CloudDocs.Application.Features.Categories.DeactivateCategory;
@@ -58,16 +63,6 @@ using CloudDocs.Application.Features.DocumentTypes.GetDocumentTypeById;
 using CloudDocs.Application.Features.DocumentTypes.GetDocumentTypes;
 using CloudDocs.Application.Features.DocumentTypes.ReactivateDocumentType;
 using CloudDocs.Application.Features.DocumentTypes.UpdateDocumentType;
-
-// Access Level Features
-using CloudDocs.Application.Features.AccessLevels.CreateAccessLevel;
-using CloudDocs.Application.Features.AccessLevels.DeactivateAccessLevel;
-using CloudDocs.Application.Features.AccessLevels.GetAccessLevel;
-using CloudDocs.Application.Features.AccessLevels.GetAccessLevelById;
-using CloudDocs.Application.Features.AccessLevels.GetAccessLevels;
-using CloudDocs.Application.Features.AccessLevels.ReactivateAccessLevel;
-using CloudDocs.Application.Features.AccessLevels.UpdateAccessLevel;
-
 // Users Features
 using CloudDocs.Application.Features.Users.CreateUser;
 using CloudDocs.Application.Features.Users.DeactivateUser;
@@ -75,6 +70,14 @@ using CloudDocs.Application.Features.Users.GetUserById;
 using CloudDocs.Application.Features.Users.GetUsers;
 using CloudDocs.Application.Features.Users.ReactivateUser;
 using CloudDocs.Application.Features.Users.UpdateUser;
+
+// Deparments Features
+using CloudDocs.Application.Features.Departments.CreateDepartment;
+using CloudDocs.Application.Features.Departments.DeactivateDepartment;
+using CloudDocs.Application.Features.Departments.GetDepartmentById;
+using CloudDocs.Application.Features.Departments.GetDepartments;
+using CloudDocs.Application.Features.Departments.ReactivateDepartment;
+using CloudDocs.Application.Features.Departments.UpdateDepartment;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -239,6 +242,16 @@ builder.Services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
 
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ILogoutService, LogoutService>();
+
+// Department services
+builder.Services.AddScoped<IGetDepartmentsService, GetDepartmentsService>();
+builder.Services.AddScoped<IGetDepartmentByIdService, GetDepartmentByIdService>();
+builder.Services.AddScoped<ICreateDepartmentService, CreateDepartmentService>();
+builder.Services.AddScoped<IUpdateDepartmentService, UpdateDepartmentService>();
+builder.Services.AddScoped<IDeactivateDepartmentService, DeactivateDepartmentService>();
+builder.Services.AddScoped<IReactivateDepartmentService, ReactivateDepartmentService>();
+
+
 
 // Email service
 builder.Services.Configure<FrontendSettings>(
