@@ -24,6 +24,7 @@ public class UploadDocumentService : IUploadDocumentService
     private readonly IDocumentTypeRepository _documentTypeRepository;
     private readonly IAccessLevelRepository _accessLevelRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IDepartmentRepository _departmentRepository;
     private readonly IAuditService _auditService;
     private readonly ILogger<UploadDocumentService> _logger;
 
@@ -39,6 +40,7 @@ public class UploadDocumentService : IUploadDocumentService
     /// <param name="documentVersionRepository">The document version repository.</param>
     /// <param name="documentTypeRepository">The document type repository.</param>
     /// <param name="accessLevelRepository">The document access level repository.</param>
+    /// <param name="departmentRepository">The document department repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
     /// <param name="logger">The logger.</param>
     public UploadDocumentService(
@@ -51,6 +53,7 @@ public class UploadDocumentService : IUploadDocumentService
         IDocumentVersionRepository documentVersionRepository,
         IDocumentTypeRepository documentTypeRepository,
         IAccessLevelRepository accessLevelRepository,
+        IDepartmentRepository departmentRepository,
         IUnitOfWork unitOfWork,
         ILogger<UploadDocumentService> logger)
     {
@@ -63,6 +66,7 @@ public class UploadDocumentService : IUploadDocumentService
         _documentVersionRepository = documentVersionRepository;
         _documentTypeRepository = documentTypeRepository;
         _accessLevelRepository = accessLevelRepository;
+        _departmentRepository = departmentRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -119,6 +123,19 @@ public class UploadDocumentService : IUploadDocumentService
         if (accessLevel is null || !accessLevel.IsActive)
             throw new NotFoundException("Access level not found or inactive.");
 
+        var selectedDepartments = new List<Department>();
+
+        if (string.Equals(accessLevel.Code, "DEPARTMENT_ONLY", StringComparison.OrdinalIgnoreCase))
+        {
+            if (request.DepartmentIds is null || request.DepartmentIds.Count == 0)
+                throw new BadRequestException("At least one department must be selected for department-only access.");
+
+            selectedDepartments = await _departmentRepository.GetByIdsAsync(request.DepartmentIds, cancellationToken);
+
+            if (selectedDepartments.Count != request.DepartmentIds.Distinct().Count())
+                throw new BadRequestException("One or more selected departments are invalid or inactive.");
+        }
+
         var sanitizedOriginalName = Path.GetFileNameWithoutExtension(request.OriginalFileName).Trim();
 
         if (string.IsNullOrWhiteSpace(sanitizedOriginalName))
@@ -147,10 +164,20 @@ public class UploadDocumentService : IUploadDocumentService
             ExpirationDatePendingDefinition = request.ExpirationDatePendingDefinition,
             AccessLevelId = accessLevel.Id,
             AccessLevel = accessLevel,
-            Department = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim(),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
+
+        if (selectedDepartments.Count > 0)
+        {
+            document.DocumentDepartments = selectedDepartments
+                .Select(d => new DocumentDepartment
+                {
+                    DocumentId = document.Id,
+                    DepartmentId = d.Id
+                })
+                .ToList();
+        }
 
         await _documentRepository.AddAsync(document, cancellationToken);
 
@@ -204,7 +231,11 @@ public class UploadDocumentService : IUploadDocumentService
             accessLevel.Id,
             accessLevel.Name,
             accessLevel.Code,
-            document.Department,
+            document.DocumentDepartments
+                .Select(dd => new DocumentDepartmentResponse(
+                    dd.DepartmentId,
+                    dd.Department.Name))
+                .ToList(),
             document.IsActive,
             document.CreatedAt);
     }

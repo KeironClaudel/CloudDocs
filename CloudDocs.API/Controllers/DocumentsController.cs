@@ -97,7 +97,7 @@ public class DocumentsController : ControllerBase
                 form.ExpirationDate,
                 form.ExpirationDatePendingDefinition,
                 form.AccessLevelId,
-                form.Department);
+                form.DepartmentIds);
 
             await using var stream = form.File.OpenReadStream();
 

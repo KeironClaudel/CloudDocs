@@ -31,8 +31,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(255)
             .IsRequired();
 
-        builder.Property(x => x.Department)
-            .HasMaxLength(100);
+        builder.HasOne(x => x.Department)
+            .WithMany(x => x.Users)
+            .HasForeignKey(x => x.DepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(x => x.Email).IsUnique();
 

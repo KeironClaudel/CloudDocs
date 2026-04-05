@@ -35,6 +35,8 @@ public class DocumentRepository : IDocumentRepository
             .Include(x => x.UploadedByUser)
             .Include(x => x.AccessLevel)
             .Include(x => x.DocumentType)
+            .Include(x => x.DocumentDepartments)
+                        .ThenInclude(dd => dd.Department)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
@@ -74,6 +76,7 @@ public class DocumentRepository : IDocumentRepository
                     .Include(x => x.DocumentType)
                     .Include(x => x.AccessLevel)
                     .Include(x => x.UploadedByUser)
+                    .Include(x => x.DocumentDepartments)
                     .AsNoTracking()
                     .AsQueryable();
 

@@ -34,7 +34,7 @@ public class UploadDocumentFormRequest
     public Guid AccessLevelId { get; set; }
 
     /// <summary>
-    /// Gets or sets the department.
+    /// Gets or sets the departments.
     /// </summary>
-    public string? Department { get; set; }
+    public List<Guid>? DepartmentIds { get; set; }
 }

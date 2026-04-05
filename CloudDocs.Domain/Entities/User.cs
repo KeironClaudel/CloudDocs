@@ -19,10 +19,12 @@ public class User : SoftDeletableEntity
     /// Gets or sets the password hash.
     /// </summary>
     public string PasswordHash { get; set; } = string.Empty;
+    
     /// <summary>
     /// Gets or sets the department.
     /// </summary>
-    public string? Department { get; set; }
+    public Guid? DepartmentId { get; set; }
+    public Department? Department { get; set; }
 
     /// <summary>
     /// Gets or sets the role id.

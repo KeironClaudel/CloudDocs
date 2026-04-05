@@ -17,23 +17,24 @@ public class DocumentAccessService : IDocumentAccessService
     /// <returns>true if the operation succeeded; otherwise, false.</returns>
     public bool CanAccessDocument(User currentUser, Document document)
     {
-        var isAdmin = string.Equals(currentUser.Role.Name, "Admin", StringComparison.OrdinalIgnoreCase);
+            var isAdmin = string.Equals(currentUser.Role?.Name, "Admin", StringComparison.OrdinalIgnoreCase);
 
-        if (isAdmin)
-            return true;
+            if (isAdmin) return true;
 
-        var accessCode = document.AccessLevel.Code?.Trim().ToUpperInvariant();
+            var accessCode = document.AccessLevel?.Code?.Trim().ToUpperInvariant();
 
-        return accessCode switch
-        {
-            "INTERNAL_PUBLIC" => true,
-            "ADMIN_ONLY" => false,
-            "OWNER_ONLY" => document.UploadedByUserId == currentUser.Id,
-            "DEPARTMENT_ONLY" =>
-                !string.IsNullOrWhiteSpace(document.Department) &&
-                !string.IsNullOrWhiteSpace(currentUser.Department) &&
-                string.Equals(document.Department, currentUser.Department, StringComparison.OrdinalIgnoreCase),
-            _ => false
-        };
+            var userDept = currentUser.Department?.Name?.Trim();
+            return accessCode switch
+            {
+                "INTERNAL_PUBLIC" => true,
+                "PRIVATE" => document.UploadedByUserId == currentUser.Id,
+                "ADMIN_ONLY" => false,
+                "OWNER_ONLY" => document.UploadedByUserId == currentUser.Id,
+                "DEPARTMENT_ONLY" => 
+                    !string.IsNullOrWhiteSpace(userDept) &&
+                    document.DocumentDepartments != null &&
+                    document.DocumentDepartments.Any(dd => string.Equals(dd.Department?.Name?.Trim(), userDept, StringComparison.OrdinalIgnoreCase)),
+                _ => false
+            };
     }
 }

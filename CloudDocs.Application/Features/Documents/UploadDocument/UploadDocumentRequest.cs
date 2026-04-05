@@ -13,7 +13,7 @@ namespace CloudDocs.Application.Features.Documents.UploadDocument;
 /// <param name="ExpirationDate">The expiration date.</param>
 /// <param name="ExpirationDatePendingDefinition">The expiration date pending definition.</param>
 /// <param name="AccessLevel">The access level.</param>
-/// <param name="Department">The department.</param>
+/// <param name="DepartmentIds">The department ids.</param>
 public sealed record UploadDocumentRequest(
     string OriginalFileName,
     string ContentType,
@@ -23,4 +23,4 @@ public sealed record UploadDocumentRequest(
     DateTime? ExpirationDate,
     bool ExpirationDatePendingDefinition,
     Guid AccessLevelId,
-    string? Department);
+    List<Guid>? DepartmentIds);

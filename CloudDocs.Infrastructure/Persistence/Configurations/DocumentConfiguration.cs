@@ -24,7 +24,7 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(x => x.FileExtension).HasMaxLength(20).IsRequired();
         builder.Property(x => x.ContentType).HasMaxLength(100).IsRequired();
         builder.Property(x => x.StoragePath).HasMaxLength(500).IsRequired();
-        builder.Property(x => x.Department).HasMaxLength(100);
+        // departments are represented via DocumentDepartments relationship
 
         builder.HasOne(x => x.Category)
             .WithMany(c => c.Documents)

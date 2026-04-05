@@ -59,6 +59,16 @@ public class AppDbContext : DbContext
     /// </summary>
     public DbSet<AccessLevelEntity> AccessLevels => Set<AccessLevelEntity>();
 
+    /// <summary>
+    /// Gets the Departments.
+    /// </summary>
+    public DbSet<Department> Departments => Set<Department>();
+
+    /// <summary>
+    /// Gets the Document departments.
+    /// </summary>
+    public DbSet<DocumentDepartment> DocumentDepartments => Set<DocumentDepartment>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

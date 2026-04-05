@@ -24,6 +24,7 @@ public class UploadDocumentServiceTests
     private readonly Mock<IFileStorageService> _fileStorageServiceMock = new();
     private readonly Mock<IDocumentTypeRepository> _documentTypeRepositoryMock = new();
     private readonly Mock<IAccessLevelRepository> _accessLevelRepositoryMock = new();
+    private readonly Mock<IDepartmentRepository> _departmentRepositoryMock = new();
     private readonly Mock<IAuditService> _auditServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
@@ -47,6 +48,7 @@ public class UploadDocumentServiceTests
         _documentVersionRepositoryMock.Object,
         _documentTypeRepositoryMock.Object,
         _accessLevelRepositoryMock.Object,
+        _departmentRepositoryMock.Object,
         _unitOfWorkMock.Object,
         NullLogger<UploadDocumentService>.Instance);
     }
@@ -298,6 +300,7 @@ public class UploadDocumentServiceTests
         var documentTypeId = Guid.NewGuid();
 
         var accessLevelId = Guid.NewGuid();
+        var departmentId = Guid.NewGuid();
         var request = new UploadDocumentRequest(
             "contract.pdf",
             "application/pdf",
@@ -306,8 +309,8 @@ public class UploadDocumentServiceTests
             documentTypeId,
             new DateTime(2026, 12, 31),
             false,
-            accessLevelId,
-            "Finance");
+            accessLevelId, // Updated access level
+            new List<Guid> { departmentId }); // Updated department list
 
         var category = new Category
         {
@@ -329,6 +332,21 @@ public class UploadDocumentServiceTests
         {
             Id = documentTypeId,
             Name = "Contract",
+            IsActive = true
+        };
+
+        var accessLevelEntity = new AccessLevelEntity
+        {
+            Id = accessLevelId,
+            Name = "Internal Public",
+            Code = "INTERNAL_PUBLIC",
+            IsActive = true
+        };
+
+        var department = new Department
+        {
+            Id = departmentId,
+            Name = "Finance",
             IsActive = true
         };
 
@@ -363,8 +381,9 @@ public class UploadDocumentServiceTests
         result.AccessLevelId.Should().Be(accessLevelId);
         result.AccessLevelName.Should().Be("Internal Public");
         result.AccessLevelCode.Should().Be("INTERNAL_PUBLIC");
+        result.VisibleDepartments.Should().ContainSingle()
+            .Which.Name.Should().Be("Finance");
         result.ExpirationDate.Should().Be(new DateTime(2026, 12, 31));
-        result.Department.Should().Be("Finance");
         result.FileExtension.Should().Be(".pdf");
 
         _documentRepositoryMock.Verify(

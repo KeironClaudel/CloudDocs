@@ -6,10 +6,6 @@ public class UploadDocumentRequestValidator : AbstractValidator<UploadDocumentRe
 {
     public UploadDocumentRequestValidator()
     {
-        RuleFor(x => x.ContentType)
-            .Must(contentType => contentType == "application/pdf")
-            .WithMessage("Only PDF files are allowed.");
-
         RuleFor(x => x.OriginalFileName)
             .NotEmpty()
                 .WithMessage("Original file name is required.")
@@ -32,14 +28,13 @@ public class UploadDocumentRequestValidator : AbstractValidator<UploadDocumentRe
             .NotEmpty()
                 .WithMessage("Document type is required.");
 
-        RuleFor(x => x.Department)
-            .MaximumLength(100)
-                .WithMessage("Department cannot exceed 100 characters.")
-            .When(x => !string.IsNullOrWhiteSpace(x.Department));
+        RuleFor(x => x.AccessLevelId)
+            .NotEmpty()
+                .WithMessage("Access level is required.");
 
-        //RuleFor(x => x.ExpirationDate)
-        //    .Must(date => !date.HasValue || date.Value > DateTime.UtcNow.Date)
-        //    .WithMessage("Expiration date must be greater than today.")
-        //    .When(x => x.ExpirationDate.HasValue);
+        RuleFor(x => x.ExpirationDate)
+            .Must(date => !date.HasValue || date.Value > DateTime.UtcNow.Date)
+            .WithMessage("Expiration date must be greater than today.")
+            .When(x => x.ExpirationDate.HasValue);
     }
 }

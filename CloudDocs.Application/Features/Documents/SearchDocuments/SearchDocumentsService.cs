@@ -70,7 +70,11 @@ public class SearchDocumentsService : ISearchDocumentsService
                 x.AccessLevelId,
                 x.AccessLevel.Name,
                 x.AccessLevel.Code,
-                x.Department,
+                x.DocumentDepartments
+                    .Select(dd => new DocumentDepartmentResponse(
+                        dd.DepartmentId,
+                        dd.Department.Name))
+                    .ToList(),
                 x.IsActive,
                 x.CreatedAt)).ToList()
         };

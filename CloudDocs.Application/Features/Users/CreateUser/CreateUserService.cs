@@ -61,7 +61,9 @@ public class CreateUserService : ICreateUserService
             FullName = request.FullName.Trim(),
             Email = request.Email.Trim().ToLower(),
             PasswordHash = _passwordHasher.Hash(request.Password),
-            Department = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim(),
+            Department = string.IsNullOrWhiteSpace(request.Department)
+                ? null
+                : new Department { Name = request.Department.Trim() },
             RoleId = role.Id,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -83,7 +85,7 @@ public class CreateUserService : ICreateUserService
             user.Id,
             user.FullName,
             user.Email,
-            user.Department,
+            user.Department?.Name,
             role.Name,
             user.IsActive,
             user.CreatedAt);

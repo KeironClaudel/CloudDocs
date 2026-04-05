@@ -3,6 +3,15 @@ using CloudDocs.Domain.Enums;
 namespace CloudDocs.Application.Features.Documents.Common;
 
 /// <summary>
+/// Represents the documentDepartment response.
+/// </summary>
+/// <param name="Id">The identifier.</param>
+/// <param name="Name">The department name.</param>
+public sealed record DocumentDepartmentResponse(
+    Guid Id,
+    string Name);
+
+/// <summary>
 /// Represents the response data for document.
 /// </summary>
 /// <param name="Id">The identifier.</param>
@@ -45,6 +54,6 @@ public sealed record DocumentResponse(
     Guid AccessLevelId,
     string AccessLevelName,
     string AccessLevelCode,
-    string? Department,
+    List<DocumentDepartmentResponse> VisibleDepartments,
     bool IsActive,
     DateTime CreatedAt);

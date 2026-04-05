@@ -2,6 +2,7 @@ using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Features.Users.Common;
 using CloudDocs.Application.Common.Interfaces.Services;
 using CloudDocs.Application.Common.Exceptions;
+using CloudDocs.Domain.Entities;
 
 namespace CloudDocs.Application.Features.Users.UpdateUser;
 
@@ -56,7 +57,9 @@ public class UpdateUserService : IUpdateUserService
 
         user.FullName = request.FullName.Trim();
         user.Email = request.Email.Trim().ToLower();
-        user.Department = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim();
+        user.Department = string.IsNullOrWhiteSpace(request.Department)
+            ? null
+            : new Department { Name = request.Department.Trim() };
         user.RoleId = role.Id;
         user.UpdatedAt = DateTime.UtcNow;
 
@@ -77,7 +80,7 @@ public class UpdateUserService : IUpdateUserService
             user.Id,
             user.FullName,
             user.Email,
-            user.Department,
+            user.Department?.Name,
             role.Name,
             user.IsActive,
             user.CreatedAt);

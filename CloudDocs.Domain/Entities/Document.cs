@@ -83,7 +83,7 @@ public class Document : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the department.
     /// </summary>
-    public string? Department { get; set; }
+    public ICollection<DocumentDepartment> DocumentDepartments { get; set; } = new List<DocumentDepartment>();
 
     /// <summary>
     /// Gets or sets the versions.

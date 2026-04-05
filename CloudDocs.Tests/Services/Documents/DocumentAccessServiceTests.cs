@@ -1,5 +1,4 @@
 using CloudDocs.Domain.Entities;
-using CloudDocs.Domain.Enums;
 using CloudDocs.Infrastructure.Services;
 using FluentAssertions;
 
@@ -24,7 +23,7 @@ public class DocumentAccessServiceTests
             FullName = "Admin User",
             Email = "admin@test.com",
             Role = new Role { Name = "Admin" },
-            Department = "Finance"
+            Department = new Department { Name = "Finance" }
         };
 
         var document = new Document
@@ -32,7 +31,9 @@ public class DocumentAccessServiceTests
             Id = Guid.NewGuid(),
             UploadedByUserId = Guid.NewGuid(),
             AccessLevel = new AccessLevelEntity { Code = "ADMIN_ONLY", Name = "Admin Only" },
-            Department = "HR"
+            DocumentDepartments = new List<DocumentDepartment> {
+                new DocumentDepartment { Department = new Department { Name = "HR" } }
+            }
         };
 
         var result = _service.CanAccessDocument(adminUser, document);
@@ -52,7 +53,7 @@ public class DocumentAccessServiceTests
             FullName = "Normal User",
             Email = "user@test.com",
             Role = new Role { Name = "User" },
-            Department = "Finance"
+            Department = new Department { Name = "Finance" }
         };
 
         var document = new Document
@@ -79,7 +80,7 @@ public class DocumentAccessServiceTests
             FullName = "Normal User",
             Email = "user@test.com",
             Role = new Role { Name = "User" },
-            Department = "Finance"
+            Department = new Department { Name = "Finance" }
         };
 
         var document = new Document
@@ -160,7 +161,7 @@ public class DocumentAccessServiceTests
             FullName = "Finance User",
             Email = "finance@test.com",
             Role = new Role { Name = "User" },
-            Department = "Finance"
+            Department = new Department { Name = "Finance" }
         };
 
         var document = new Document
@@ -168,7 +169,9 @@ public class DocumentAccessServiceTests
             Id = Guid.NewGuid(),
             UploadedByUserId = Guid.NewGuid(),
             AccessLevel = new AccessLevelEntity { Code = "DEPARTMENT_ONLY", Name = "Department Only" },
-            Department = "Finance"
+            DocumentDepartments = new List<DocumentDepartment> {
+                new DocumentDepartment { Department = new Department { Name = "Finance" } }
+            }
         };
 
         var result = _service.CanAccessDocument(user, document);
@@ -188,7 +191,7 @@ public class DocumentAccessServiceTests
             FullName = "HR User",
             Email = "hr@test.com",
             Role = new Role { Name = "User" },
-            Department = "HR"
+            Department = new Department { Name = "HR" }
         };
 
         var document = new Document
@@ -196,7 +199,9 @@ public class DocumentAccessServiceTests
             Id = Guid.NewGuid(),
             UploadedByUserId = Guid.NewGuid(),
             AccessLevel = new AccessLevelEntity { Code = "DEPARTMENT_ONLY", Name = "Department Only" },
-            Department = "Finance"
+            DocumentDepartments = new List<DocumentDepartment> {
+                new DocumentDepartment { Department = new Department { Name = "Finance" } }
+            }
         };
 
         var result = _service.CanAccessDocument(user, document);

@@ -215,6 +215,8 @@ builder.Services.AddScoped<IUpdateAccessLevelService, UpdateAccessLevelService>(
 builder.Services.AddScoped<IDeactivateAccessLevelService, DeactivateAccessLevelService>();
 builder.Services.AddScoped<IReactivateAccessLevelService, ReactivateAccessLevelService>();
 
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+
 // Document Access services
 builder.Services.AddScoped<IDocumentAccessService, DocumentAccessService>();
 
