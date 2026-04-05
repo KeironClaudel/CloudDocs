@@ -54,6 +54,11 @@ public class AppDbContext : DbContext
     /// </summary>
     public DbSet<DocumentTypeEntity> DocumentTypes => Set<DocumentTypeEntity>();
 
+    /// <summary>
+    /// Gets the Document Access Level.
+    /// </summary>
+    public DbSet<AccessLevelEntity> AccessLevels => Set<AccessLevelEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

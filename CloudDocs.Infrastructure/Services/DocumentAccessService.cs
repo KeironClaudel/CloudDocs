@@ -22,13 +22,14 @@ public class DocumentAccessService : IDocumentAccessService
         if (isAdmin)
             return true;
 
-        return document.AccessLevel switch
+        var accessCode = document.AccessLevel.Code?.Trim().ToUpperInvariant();
+
+        return accessCode switch
         {
-            DocumentAccessLevel.InternalPublic => true,
-            DocumentAccessLevel.Private => document.UploadedByUserId == currentUser.Id,
-            DocumentAccessLevel.AdminOnly => false,
-            DocumentAccessLevel.OwnerOnly => document.UploadedByUserId == currentUser.Id,
-            DocumentAccessLevel.DepartmentOnly =>
+            "INTERNAL_PUBLIC" => true,
+            "ADMIN_ONLY" => false,
+            "OWNER_ONLY" => document.UploadedByUserId == currentUser.Id,
+            "DEPARTMENT_ONLY" =>
                 !string.IsNullOrWhiteSpace(document.Department) &&
                 !string.IsNullOrWhiteSpace(currentUser.Department) &&
                 string.Equals(document.Department, currentUser.Department, StringComparison.OrdinalIgnoreCase),

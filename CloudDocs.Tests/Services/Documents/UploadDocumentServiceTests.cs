@@ -23,6 +23,7 @@ public class UploadDocumentServiceTests
     private readonly Mock<IDocumentVersionRepository> _documentVersionRepositoryMock = new();
     private readonly Mock<IFileStorageService> _fileStorageServiceMock = new();
     private readonly Mock<IDocumentTypeRepository> _documentTypeRepositoryMock = new();
+    private readonly Mock<IAccessLevelRepository> _accessLevelRepositoryMock = new();
     private readonly Mock<IAuditService> _auditServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
@@ -45,6 +46,7 @@ public class UploadDocumentServiceTests
         _auditServiceMock.Object,
         _documentVersionRepositoryMock.Object,
         _documentTypeRepositoryMock.Object,
+        _accessLevelRepositoryMock.Object,
         _unitOfWorkMock.Object,
         NullLogger<UploadDocumentService>.Instance);
     }
@@ -64,7 +66,7 @@ public class UploadDocumentServiceTests
             Guid.NewGuid(),
             null,
             false,
-            DocumentAccessLevel.InternalPublic,
+            Guid.NewGuid(),
             null);
 
         using var stream = new MemoryStream();
@@ -91,7 +93,7 @@ public class UploadDocumentServiceTests
             Guid.NewGuid(),
             null,
             false,
-            DocumentAccessLevel.InternalPublic,
+            Guid.NewGuid(),
             null);
 
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
@@ -118,7 +120,7 @@ public class UploadDocumentServiceTests
             Guid.NewGuid(),
             null,
             false,
-            DocumentAccessLevel.InternalPublic,
+            Guid.NewGuid(),
             null);
 
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
@@ -145,7 +147,7 @@ public class UploadDocumentServiceTests
             Guid.NewGuid(),
             null,
             false,
-            DocumentAccessLevel.InternalPublic,
+            Guid.NewGuid(),
             null);
 
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
@@ -174,7 +176,7 @@ public class UploadDocumentServiceTests
             Guid.NewGuid(),
             null,
             false,
-            DocumentAccessLevel.InternalPublic,
+            Guid.NewGuid(),
             null);
 
         _categoryRepositoryMock
@@ -208,7 +210,7 @@ public class UploadDocumentServiceTests
             Guid.NewGuid(),
             null,
             false,
-            DocumentAccessLevel.InternalPublic,
+            Guid.NewGuid(),
             null);
 
         _categoryRepositoryMock
@@ -252,7 +254,7 @@ public class UploadDocumentServiceTests
             Guid.NewGuid(),
             null,
             false,
-            DocumentAccessLevel.InternalPublic,
+            Guid.NewGuid(),
             null);
 
         _categoryRepositoryMock
@@ -295,6 +297,7 @@ public class UploadDocumentServiceTests
         var userId = Guid.NewGuid();
         var documentTypeId = Guid.NewGuid();
 
+        var accessLevelId = Guid.NewGuid();
         var request = new UploadDocumentRequest(
             "contract.pdf",
             "application/pdf",
@@ -303,7 +306,7 @@ public class UploadDocumentServiceTests
             documentTypeId,
             new DateTime(2026, 12, 31),
             false,
-            DocumentAccessLevel.InternalPublic,
+            accessLevelId,
             "Finance");
 
         var category = new Category
@@ -357,8 +360,10 @@ public class UploadDocumentServiceTests
         result.UploadedByUserName.Should().Be("Keiron");
         result.DocumentTypeId.Should().Be(documentTypeId);
         result.DocumentTypeName.Should().Be("Contract");
+        result.AccessLevelId.Should().Be(accessLevelId);
+        result.AccessLevelName.Should().Be("Internal Public");
+        result.AccessLevelCode.Should().Be("INTERNAL_PUBLIC");
         result.ExpirationDate.Should().Be(new DateTime(2026, 12, 31));
-        result.AccessLevel.Should().Be(DocumentAccessLevel.InternalPublic);
         result.Department.Should().Be("Finance");
         result.FileExtension.Should().Be(".pdf");
 

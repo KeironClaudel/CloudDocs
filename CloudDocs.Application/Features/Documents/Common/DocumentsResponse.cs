@@ -42,7 +42,9 @@ public sealed record DocumentResponse(
     string DocumentTypeName,
     DateTime? ExpirationDate,
     bool ExpirationDatePendingDefinition,
-    DocumentAccessLevel AccessLevel,
+    Guid AccessLevelId,
+    string AccessLevelName,
+    string AccessLevelCode,
     string? Department,
     bool IsActive,
     DateTime CreatedAt);

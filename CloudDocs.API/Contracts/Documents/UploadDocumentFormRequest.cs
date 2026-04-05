@@ -1,3 +1,4 @@
+using CloudDocs.Domain.Entities;
 using CloudDocs.Domain.Enums;
 
 namespace CloudDocs.API.Contracts.Documents;
@@ -30,7 +31,8 @@ public class UploadDocumentFormRequest
     /// <summary>
     /// Gets or sets the access level.
     /// </summary>
-    public DocumentAccessLevel AccessLevel { get; set; }
+    public Guid AccessLevelId { get; set; }
+    public AccessLevelEntity AccessLevel { get; set; } = null!;
     /// <summary>
     /// Gets or sets the department.
     /// </summary>

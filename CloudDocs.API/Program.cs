@@ -191,6 +191,7 @@ builder.Services.AddScoped<IGetDocumentVersionsService, GetDocumentVersionsServi
 builder.Services.AddScoped<IUploadDocumentVersionService, UploadDocumentVersionService>();
 builder.Services.AddScoped<IReactivateDocumentService, ReactivateDocumentService>();
 builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
+builder.Services.AddScoped<IAccessLevelRepository, AccessLevelRepository>();
 
 builder.Services.AddScoped<IGetDocumentTypesService, GetDocumentTypesService>();
 builder.Services.AddScoped<IGetDocumentTypeByIdService, GetDocumentTypeByIdService>();

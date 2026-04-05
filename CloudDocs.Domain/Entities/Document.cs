@@ -77,7 +77,9 @@ public class Document : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the access level.
     /// </summary>
-    public DocumentAccessLevel AccessLevel { get; set; } = DocumentAccessLevel.InternalPublic;
+    public Guid AccessLevelId { get; set; }
+    public AccessLevelEntity AccessLevel { get; set; } = null!;
+
     /// <summary>
     /// Gets or sets the department.
     /// </summary>

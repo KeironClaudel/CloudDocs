@@ -22,6 +22,7 @@ public class UploadDocumentService : IUploadDocumentService
     private readonly FileStorageSettings _fileStorageSettings;
     private readonly IDocumentVersionRepository _documentVersionRepository;
     private readonly IDocumentTypeRepository _documentTypeRepository;
+    private readonly IAccessLevelRepository _accessLevelRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditService _auditService;
     private readonly ILogger<UploadDocumentService> _logger;
@@ -37,6 +38,7 @@ public class UploadDocumentService : IUploadDocumentService
     /// <param name="auditService">The audit service.</param>
     /// <param name="documentVersionRepository">The document version repository.</param>
     /// <param name="documentTypeRepository">The document type repository.</param>
+    /// <param name="accessLevelRepository">The document access level repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
     /// <param name="logger">The logger.</param>
     public UploadDocumentService(
@@ -48,6 +50,7 @@ public class UploadDocumentService : IUploadDocumentService
         IAuditService auditService,
         IDocumentVersionRepository documentVersionRepository,
         IDocumentTypeRepository documentTypeRepository,
+        IAccessLevelRepository accessLevelRepository,
         IUnitOfWork unitOfWork,
         ILogger<UploadDocumentService> logger)
     {
@@ -59,6 +62,7 @@ public class UploadDocumentService : IUploadDocumentService
         _auditService = auditService;
         _documentVersionRepository = documentVersionRepository;
         _documentTypeRepository = documentTypeRepository;
+        _accessLevelRepository = accessLevelRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -111,17 +115,9 @@ public class UploadDocumentService : IUploadDocumentService
         if (user is null || !user.IsActive)
             throw new NotFoundException("Current user not found or inactive.");
 
-        //var normalizedTypeName = documentType.Name.Trim().ToLower();
-
-        //var requiresExpiration =
-        //            normalizedTypeName == "contract" ||
-        //            normalizedTypeName == "permit" ||
-        //            normalizedTypeName == "policy" ||
-        //            normalizedTypeName == "legal document";
-
-
-        //if (requiresExpiration && !request.ExpirationDate.HasValue && !request.ExpirationDatePendingDefinition)
-        //    throw new BadRequestException("Expiration date or pending definition is required for this document type.");
+        var accessLevel = await _accessLevelRepository.GetByIdAsync(request.AccessLevelId, cancellationToken);
+        if (accessLevel is null || !accessLevel.IsActive)
+            throw new NotFoundException("Access level not found or inactive.");
 
         var sanitizedOriginalName = Path.GetFileNameWithoutExtension(request.OriginalFileName).Trim();
 
@@ -149,7 +145,8 @@ public class UploadDocumentService : IUploadDocumentService
             DocumentType = documentType,
             ExpirationDate = request.ExpirationDate,
             ExpirationDatePendingDefinition = request.ExpirationDatePendingDefinition,
-            AccessLevel = request.AccessLevel,
+            AccessLevelId = accessLevel.Id,
+            AccessLevel = accessLevel,
             Department = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim(),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -200,11 +197,13 @@ public class UploadDocumentService : IUploadDocumentService
             user.FullName,
             document.Month,
             document.Year,
-            document.DocumentTypeId,
+            documentType.Id,
             documentType.Name,
             document.ExpirationDate,
             document.ExpirationDatePendingDefinition,
-            document.AccessLevel,
+            accessLevel.Id,
+            accessLevel.Name,
+            accessLevel.Code,
             document.Department,
             document.IsActive,
             document.CreatedAt);

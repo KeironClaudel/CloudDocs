@@ -22,5 +22,5 @@ public sealed record UploadDocumentRequest(
     Guid DocumentTypeId,
     DateTime? ExpirationDate,
     bool ExpirationDatePendingDefinition,
-    DocumentAccessLevel AccessLevel,
+    Guid AccessLevelId,
     string? Department);

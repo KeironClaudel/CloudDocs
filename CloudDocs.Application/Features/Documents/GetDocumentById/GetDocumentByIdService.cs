@@ -59,7 +59,9 @@ public class GetDocumentByIdService : IGetDocumentByIdService
             x.DocumentType.Name,
             x.ExpirationDate,
             x.ExpirationDatePendingDefinition,
-            x.AccessLevel,
+            x.AccessLevelId,
+            x.AccessLevel.Name,
+            x.AccessLevel.Code,
             x.Department,
             x.IsActive,
             x.CreatedAt);

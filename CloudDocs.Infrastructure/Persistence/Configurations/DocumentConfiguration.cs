@@ -26,27 +26,33 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(x => x.StoragePath).HasMaxLength(500).IsRequired();
         builder.Property(x => x.Department).HasMaxLength(100);
 
-        builder.HasIndex(x => x.OriginalFileName);
-        builder.HasIndex(x => x.CategoryId);
-        builder.HasIndex(x => x.Month);
-        builder.HasIndex(x => x.Year);
-
-        builder.HasOne(x => x.DocumentType)
-                            .WithMany(x => x.Documents)
-                            .HasForeignKey(x => x.DocumentTypeId)
-                            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasIndex(x => x.IsActive);
-        builder.HasIndex(x => x.DocumentTypeId);
-
         builder.HasOne(x => x.Category)
             .WithMany(c => c.Documents)
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(x => x.DocumentType)
+                    .WithMany(x => x.Documents)
+                    .HasForeignKey(x => x.DocumentTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(x => x.UploadedByUser)
             .WithMany(u => u.UploadedDocuments)
             .HasForeignKey(x => x.UploadedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.AccessLevel)
+            .WithMany(x => x.Documents)
+            .HasForeignKey(x => x.AccessLevelId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.OriginalFileName);
+        builder.HasIndex(x => x.CategoryId);
+        builder.HasIndex(x => x.Month);
+        builder.HasIndex(x => x.Year);
+        builder.HasIndex(x => x.AccessLevelId);
+        builder.HasIndex(x => x.IsActive);
+        builder.HasIndex(x => x.DocumentTypeId);
+
     }
 }

@@ -31,7 +31,7 @@ public class DocumentAccessServiceTests
         {
             Id = Guid.NewGuid(),
             UploadedByUserId = Guid.NewGuid(),
-            AccessLevel = DocumentAccessLevel.AdminOnly,
+            AccessLevel = new AccessLevelEntity { Code = "ADMIN_ONLY", Name = "Admin Only" },
             Department = "HR"
         };
 
@@ -59,7 +59,7 @@ public class DocumentAccessServiceTests
         {
             Id = Guid.NewGuid(),
             UploadedByUserId = Guid.NewGuid(),
-            AccessLevel = DocumentAccessLevel.InternalPublic
+            AccessLevel = new AccessLevelEntity { Code = "INTERNAL_PUBLIC", Name = "Internal Public" }
         };
 
         var result = _service.CanAccessDocument(user, document);
@@ -86,7 +86,7 @@ public class DocumentAccessServiceTests
         {
             Id = Guid.NewGuid(),
             UploadedByUserId = Guid.NewGuid(),
-            AccessLevel = DocumentAccessLevel.AdminOnly
+            AccessLevel = new AccessLevelEntity { Code = "ADMIN_ONLY", Name = "Admin Only" }
         };
 
         var result = _service.CanAccessDocument(user, document);
@@ -114,7 +114,7 @@ public class DocumentAccessServiceTests
         {
             Id = Guid.NewGuid(),
             UploadedByUserId = userId,
-            AccessLevel = DocumentAccessLevel.OwnerOnly
+            AccessLevel = new AccessLevelEntity { Code = "OWNER_ONLY", Name = "Owner Only" }
         };
 
         var result = _service.CanAccessDocument(user, document);
@@ -140,7 +140,7 @@ public class DocumentAccessServiceTests
         {
             Id = Guid.NewGuid(),
             UploadedByUserId = Guid.NewGuid(),
-            AccessLevel = DocumentAccessLevel.OwnerOnly
+            AccessLevel = new AccessLevelEntity { Code = "OWNER_ONLY", Name = "Owner Only" }
         };
 
         var result = _service.CanAccessDocument(user, document);
@@ -167,7 +167,7 @@ public class DocumentAccessServiceTests
         {
             Id = Guid.NewGuid(),
             UploadedByUserId = Guid.NewGuid(),
-            AccessLevel = DocumentAccessLevel.DepartmentOnly,
+            AccessLevel = new AccessLevelEntity { Code = "DEPARTMENT_ONLY", Name = "Department Only" },
             Department = "Finance"
         };
 
@@ -195,7 +195,7 @@ public class DocumentAccessServiceTests
         {
             Id = Guid.NewGuid(),
             UploadedByUserId = Guid.NewGuid(),
-            AccessLevel = DocumentAccessLevel.DepartmentOnly,
+            AccessLevel = new AccessLevelEntity { Code = "DEPARTMENT_ONLY", Name = "Department Only" },
             Department = "Finance"
         };
 
