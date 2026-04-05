@@ -4,9 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CloudDocs.Infrastructure.Persistence.Repositories;
 
-/// <summary>
-/// Provides persistence operations for access level entities.
-/// </summary>
 public class AccessLevelRepository : IAccessLevelRepository
 {
     private readonly AppDbContext _context;
@@ -32,23 +29,26 @@ public class AccessLevelRepository : IAccessLevelRepository
 
     public async Task<AccessLevelEntity?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
-        var normalized = code.Trim().ToUpperInvariant();
+        var normalizedCode = code.Trim().ToUpper();
+
         return await _context.AccessLevels
-            .FirstOrDefaultAsync(x => x.Code.ToUpper() == normalized, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Code.ToUpper() == normalizedCode, cancellationToken);
     }
 
     public async Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default)
     {
-        var normalized = code.Trim().ToUpperInvariant();
+        var normalizedCode = code.Trim().ToUpper();
+
         return await _context.AccessLevels
-            .AnyAsync(x => x.Code.ToUpper() == normalized, cancellationToken);
+            .AnyAsync(x => x.Code.ToUpper() == normalizedCode, cancellationToken);
     }
 
     public async Task<bool> NameExistsAsync(string name, CancellationToken cancellationToken = default)
     {
-        var normalized = name.Trim().ToLower();
+        var normalizedName = name.Trim().ToLower();
+
         return await _context.AccessLevels
-            .AnyAsync(x => x.Name.ToLower() == normalized, cancellationToken);
+            .AnyAsync(x => x.Name.ToLower() == normalizedName, cancellationToken);
     }
 
     public async Task AddAsync(AccessLevelEntity entity, CancellationToken cancellationToken = default)

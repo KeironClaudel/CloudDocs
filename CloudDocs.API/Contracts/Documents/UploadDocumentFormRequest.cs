@@ -32,7 +32,7 @@ public class UploadDocumentFormRequest
     /// Gets or sets the access level.
     /// </summary>
     public Guid AccessLevelId { get; set; }
-    public AccessLevelEntity AccessLevel { get; set; } = null!;
+
     /// <summary>
     /// Gets or sets the department.
     /// </summary>

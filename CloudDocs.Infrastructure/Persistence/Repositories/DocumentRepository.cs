@@ -33,6 +33,7 @@ public class DocumentRepository : IDocumentRepository
         return await _context.Documents
             .Include(x => x.Category)
             .Include(x => x.UploadedByUser)
+            .Include(x => x.AccessLevel)
             .Include(x => x.DocumentType)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
@@ -71,6 +72,7 @@ public class DocumentRepository : IDocumentRepository
         var query = _context.Documents
                     .Include(x => x.Category)
                     .Include(x => x.DocumentType)
+                    .Include(x => x.AccessLevel)
                     .Include(x => x.UploadedByUser)
                     .AsNoTracking()
                     .AsQueryable();

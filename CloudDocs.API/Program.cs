@@ -1,22 +1,72 @@
 // System imports
-using System.Text;
-using CloudDocs.Application.Common.Interfaces.Persistence;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using CloudDocs.Application.Common.Interfaces.Services;
-using CloudDocs.Application.Common.Models;
-using CloudDocs.Infrastructure.Services;
-
-// Auth Imports
-using CloudDocs.Application.Common.Interfaces.Security;
-using CloudDocs.Application.Features.Auth.Login;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 using CloudDocs.Infrastructure.Persistence;
 using CloudDocs.Infrastructure.Persistence.Repositories;
 using CloudDocs.Infrastructure.Security;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using CloudDocs.Infrastructure.Services;
+using CloudDocs.Application.Common.Models;
 
 
+// Global Error Handling Middleware
+using CloudDocs.API.Extensions;
+using CloudDocs.Application.Common.Interfaces.Persistence;
+
+// Auth Imports
+using CloudDocs.Application.Common.Interfaces.Security;
+using CloudDocs.Application.Common.Interfaces.Services;
+
+// Auditting Features
+using CloudDocs.Application.Features.AuditLogs.GetAuditLogs;
+using CloudDocs.Application.Features.Auth.ChangePassword;
+
+// Password management features
+using CloudDocs.Application.Features.Auth.ForgotPassword;
+using CloudDocs.Application.Features.Auth.Login;
+using CloudDocs.Application.Features.Auth.Logout;
+
+// Token management features
+using CloudDocs.Application.Features.Auth.RefreshToken;
+using CloudDocs.Application.Features.Auth.ResetPassword;
+
+// Categories Features
+using CloudDocs.Application.Features.Categories.CreateCategory;
+using CloudDocs.Application.Features.Categories.DeactivateCategory;
+using CloudDocs.Application.Features.Categories.GetCategories;
+using CloudDocs.Application.Features.Categories.GetCategoryById;
+using CloudDocs.Application.Features.Categories.ReactivateCategory;
+using CloudDocs.Application.Features.Categories.UpdateCategory;
+
+// Documents Features
+using CloudDocs.Application.Features.Documents.DeactivateDocument;
+using CloudDocs.Application.Features.Documents.GetDocumentById;
+using CloudDocs.Application.Features.Documents.GetDocumentFile;
+using CloudDocs.Application.Features.Documents.ReactivateDocument;
+using CloudDocs.Application.Features.Documents.RenameDocument;
+using CloudDocs.Application.Features.Documents.SearchDocuments;
+using CloudDocs.Application.Features.Documents.UploadDocument;
+using CloudDocs.Application.Features.Documents.Versions.GetDocumentVersions;
+using CloudDocs.Application.Features.Documents.Versions.UploadDocumentVersion;
+using CloudDocs.Application.Features.DocumentTypes.CreateDocumentType;
+using CloudDocs.Application.Features.DocumentTypes.DeactivateDocumentType;
+using CloudDocs.Application.Features.DocumentTypes.GetDocumentTypeById;
+using CloudDocs.Application.Features.DocumentTypes.GetDocumentTypes;
+using CloudDocs.Application.Features.DocumentTypes.ReactivateDocumentType;
+using CloudDocs.Application.Features.DocumentTypes.UpdateDocumentType;
+
+// Access Level Features
+using CloudDocs.Application.Features.AccessLevels.CreateAccessLevel;
+using CloudDocs.Application.Features.AccessLevels.DeactivateAccessLevel;
+using CloudDocs.Application.Features.AccessLevels.GetAccessLevel;
+using CloudDocs.Application.Features.AccessLevels.GetAccessLevelById;
+using CloudDocs.Application.Features.AccessLevels.GetAccessLevels;
+using CloudDocs.Application.Features.AccessLevels.ReactivateAccessLevel;
+using CloudDocs.Application.Features.AccessLevels.UpdateAccessLevel;
 
 // Users Features
 using CloudDocs.Application.Features.Users.CreateUser;
@@ -26,53 +76,10 @@ using CloudDocs.Application.Features.Users.GetUsers;
 using CloudDocs.Application.Features.Users.ReactivateUser;
 using CloudDocs.Application.Features.Users.UpdateUser;
 
-// Categories Features
-using CloudDocs.Application.Features.Categories.CreateCategory;
-using CloudDocs.Application.Features.Categories.GetCategoryById;
-using CloudDocs.Application.Features.Categories.GetCategories;
-using CloudDocs.Application.Features.Categories.UpdateCategory;
-using CloudDocs.Application.Features.Categories.DeactivateCategory;
-using CloudDocs.Application.Features.Categories.ReactivateCategory;
-
-// Documents Features
-using CloudDocs.Application.Features.Documents.DeactivateDocument;
-using CloudDocs.Application.Features.Documents.GetDocumentById;
-using CloudDocs.Application.Features.Documents.GetDocumentFile;
-using CloudDocs.Application.Features.Documents.RenameDocument;
-using CloudDocs.Application.Features.Documents.SearchDocuments;
-using CloudDocs.Application.Features.Documents.UploadDocument;
-using CloudDocs.Application.Features.Documents.Versions.UploadDocumentVersion;
-using CloudDocs.Application.Features.Documents.Versions.GetDocumentVersions;
-using CloudDocs.Application.Features.Documents.ReactivateDocument;
-using CloudDocs.Application.Features.DocumentTypes.GetDocumentTypes;
-using CloudDocs.Application.Features.DocumentTypes.GetDocumentTypeById;
-using CloudDocs.Application.Features.DocumentTypes.CreateDocumentType;
-using CloudDocs.Application.Features.DocumentTypes.UpdateDocumentType;
-using CloudDocs.Application.Features.DocumentTypes.DeactivateDocumentType;
-using CloudDocs.Application.Features.DocumentTypes.ReactivateDocumentType;
-
-// Auditting Features
-using CloudDocs.Application.Features.AuditLogs.GetAuditLogs;
-
-// Password management features
-using CloudDocs.Application.Features.Auth.ForgotPassword;
-using CloudDocs.Application.Features.Auth.ResetPassword;
-using CloudDocs.Application.Features.Auth.ChangePassword;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-
-// Token management features
-using CloudDocs.Application.Features.Auth.RefreshToken;
-using CloudDocs.Application.Features.Auth.Logout;
-
-// Global Error Handling Middleware
-using CloudDocs.API.Extensions;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
 
 // Database configuration
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -199,6 +206,14 @@ builder.Services.AddScoped<ICreateDocumentTypeService, CreateDocumentTypeService
 builder.Services.AddScoped<IUpdateDocumentTypeService, UpdateDocumentTypeService>();
 builder.Services.AddScoped<IDeactivateDocumentTypeService, DeactivateDocumentTypeService>();
 builder.Services.AddScoped<IReactivateDocumentTypeService, ReactivateDocumentTypeService>();
+builder.Services.AddScoped<IAccessLevelRepository, AccessLevelRepository>();
+
+builder.Services.AddScoped<IGetAccessLevelsService, GetAccessLevelsService>();
+builder.Services.AddScoped<IGetAccessLevelByIdService, GetAccessLevelByIdService>();
+builder.Services.AddScoped<ICreateAccessLevelService, CreateAccessLevelService>();
+builder.Services.AddScoped<IUpdateAccessLevelService, UpdateAccessLevelService>();
+builder.Services.AddScoped<IDeactivateAccessLevelService, DeactivateAccessLevelService>();
+builder.Services.AddScoped<IReactivateAccessLevelService, ReactivateAccessLevelService>();
 
 // Document Access services
 builder.Services.AddScoped<IDocumentAccessService, DocumentAccessService>();
