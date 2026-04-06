@@ -253,12 +253,10 @@ Prevents data loss and enables auditability of file changes.
 
 ## 📈 Future Improvements
 
-- Pagination at database level with access filters  
 - File storage integration (AWS S3 / Azure Blob)  
-- Role-based policy authorization  
 - Caching (Redis)  
 - Rate limiting  
-- Full integration tests  
+- Functional email service
 
 ---
 
