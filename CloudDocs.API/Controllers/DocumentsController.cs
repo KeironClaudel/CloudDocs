@@ -1,19 +1,19 @@
-using System.Security.Claims;
 using CloudDocs.API.Contracts.Documents;
+using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Features.Documents.Common;
 using CloudDocs.Application.Features.Documents.DeactivateDocument;
 using CloudDocs.Application.Features.Documents.GetDocumentById;
 using CloudDocs.Application.Features.Documents.GetDocumentFile;
+using CloudDocs.Application.Features.Documents.ReactivateDocument;
 using CloudDocs.Application.Features.Documents.RenameDocument;
 using CloudDocs.Application.Features.Documents.SearchDocuments;
+using CloudDocs.Application.Features.Documents.UpdateDocumentVisibility;
 using CloudDocs.Application.Features.Documents.UploadDocument;
-using CloudDocs.Domain.Enums;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using CloudDocs.Application.Features.Documents.Versions.GetDocumentVersions;
 using CloudDocs.Application.Features.Documents.Versions.UploadDocumentVersion;
-using CloudDocs.Application.Common.Interfaces.Persistence;
-using CloudDocs.Application.Features.Documents.ReactivateDocument;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CloudDocs.API.Controllers;
 
@@ -33,6 +33,7 @@ public class DocumentsController : ControllerBase
     private readonly IGetDocumentFileService _getDocumentFileService;
     private readonly IGetDocumentVersionsService _getDocumentVersionsService;
     private readonly IUploadDocumentVersionService _uploadDocumentVersionService;
+    private readonly IUpdateDocumentVisibilityService _updateDocumentVisibilityService;
     private readonly IUserRepository _userRepository;
     private readonly IReactivateDocumentService _reactivateDocumentService;
 
@@ -47,6 +48,7 @@ public class DocumentsController : ControllerBase
     /// <param name="getDocumentFileService">The get document file service.</param>
     /// <param name="getDocumentVersionsService">The get document versions service.</param>
     /// <param name="uploadDocumentVersionService">The upload document version service.</param>
+    /// <param name="updateDocumentVisibilityService">The update document visibility service.</param>
     /// <param name="userRepository">The user repository.</param>
     /// <param name="reactivateDocumentService">The reactivate document service.</param>
     public DocumentsController(
@@ -58,6 +60,7 @@ public class DocumentsController : ControllerBase
     IGetDocumentFileService getDocumentFileService,
     IGetDocumentVersionsService getDocumentVersionsService,
     IUploadDocumentVersionService uploadDocumentVersionService,
+    IUpdateDocumentVisibilityService updateDocumentVisibilityService,
     IUserRepository userRepository,
     IReactivateDocumentService reactivateDocumentService    )
     {
@@ -69,6 +72,7 @@ public class DocumentsController : ControllerBase
         _getDocumentFileService = getDocumentFileService;
         _getDocumentVersionsService = getDocumentVersionsService;
         _uploadDocumentVersionService = uploadDocumentVersionService;
+        _updateDocumentVisibilityService = updateDocumentVisibilityService;
         _userRepository = userRepository;
         _reactivateDocumentService = reactivateDocumentService;
     }
@@ -385,6 +389,29 @@ public class DocumentsController : ControllerBase
     public async Task<IActionResult> Reactivate(Guid id, CancellationToken cancellationToken)
     {
         var success = await _reactivateDocumentService.ReactivateAsync(id, cancellationToken);
+
+        if (!success)
+            return NotFound(new { message = "Document not found." });
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Updates document visibility.
+    /// </summary>
+    /// <param name="id"> Theidentifier.</param>
+    /// <param name="request"> The request data. </param>
+    /// <param name="cancellationToken"> The cancellation token.</param>
+    /// <returns></returns>
+
+    [HttpPatch("{id:guid}/visibility")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateVisibility(
+    Guid id,
+    [FromBody] UpdateDocumentVisibilityRequest request,
+    CancellationToken cancellationToken)
+    {
+        var success = await _updateDocumentVisibilityService.UpdateAsync(id, request, cancellationToken);
 
         if (!success)
             return NotFound(new { message = "Document not found." });

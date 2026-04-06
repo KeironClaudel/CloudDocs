@@ -1,12 +1,13 @@
-using System.Security.Claims;
+using CloudDocs.API.Common;
 using CloudDocs.Application.Features.Auth.ChangePassword;
 using CloudDocs.Application.Features.Auth.ForgotPassword;
 using CloudDocs.Application.Features.Auth.Login;
+using CloudDocs.Application.Features.Auth.Logout;
+using CloudDocs.Application.Features.Auth.RefreshToken;
 using CloudDocs.Application.Features.Auth.ResetPassword;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using CloudDocs.Application.Features.Auth.Logout;
-using CloudDocs.Application.Features.Auth.RefreshToken;
+using System.Security.Claims;
 
 namespace CloudDocs.API.Controllers;
 
@@ -23,6 +24,7 @@ public class AuthController : ControllerBase
     private readonly IChangePasswordService _changePasswordService;
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly ILogoutService _logoutService;
+    private readonly AuthCookieHelper _authCookieHelper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AuthController"/> class.
@@ -39,6 +41,7 @@ public class AuthController : ControllerBase
     IResetPasswordService resetPasswordService,
     IChangePasswordService changePasswordService,
     IRefreshTokenService refreshTokenService,
+    AuthCookieHelper authCookieHelper,
     ILogoutService logoutService)
     {
         _loginService = loginService;
@@ -46,6 +49,7 @@ public class AuthController : ControllerBase
         _resetPasswordService = resetPasswordService;
         _changePasswordService = changePasswordService;
         _refreshTokenService = refreshTokenService;
+        _authCookieHelper = authCookieHelper;
         _logoutService = logoutService;
     }
 
@@ -58,8 +62,16 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
-        var response = await _loginService.LoginAsync(request, cancellationToken);
-        return Ok(response);
+        var result = await _loginService.LoginAsync(request, cancellationToken);
+
+        _authCookieHelper.SetAuthCookies(Response, result.AccessToken, result.RefreshToken);
+
+        var clientResponse = new LoginClientResponse(
+            result.FullName,
+            result.Email,
+            result.Role);
+
+        return Ok(clientResponse);
     }
 
     /// <summary>
@@ -107,35 +119,44 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Refreshes the token.
+    /// Refreshes the auth token.
     /// </summary>
-    /// <param name="request">The request data.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("refresh-token")]
-    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> RefreshToken(CancellationToken cancellationToken)
     {
-        try
-        {
-            var response = await _refreshTokenService.ExecuteAsync(request, cancellationToken);
-            return Ok(response);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var refreshToken = _authCookieHelper.GetRefreshToken(Request);
+
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            return Unauthorized(new { message = "Refresh token is missing." });
+
+        var result = await _refreshTokenService.ExecuteAsync(
+            new RefreshTokenRequest(refreshToken),
+            cancellationToken);
+
+        _authCookieHelper.SetAuthCookies(Response, result.AccessToken, result.RefreshToken);
+
+        return NoContent();
     }
 
     /// <summary>
     /// Logs the user out.
     /// </summary>
-    /// <param name="request">The request data.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        await _logoutService.ExecuteAsync(request, cancellationToken);
+        var refreshToken = _authCookieHelper.GetRefreshToken(Request);
+
+        if (!string.IsNullOrWhiteSpace(refreshToken))
+        {
+            await _logoutService.ExecuteAsync(new LogoutRequest(refreshToken), cancellationToken);
+        }
+
+        _authCookieHelper.ClearAuthCookies(Response);
+
         return NoContent();
     }
 }

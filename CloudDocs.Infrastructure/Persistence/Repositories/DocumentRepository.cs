@@ -31,13 +31,13 @@ public class DocumentRepository : IDocumentRepository
     public async Task<Document?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Documents
-            .Include(x => x.Category)
-            .Include(x => x.UploadedByUser)
-            .Include(x => x.AccessLevel)
-            .Include(x => x.DocumentType)
-            .Include(x => x.DocumentDepartments)
-                        .ThenInclude(dd => dd.Department)
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+                        .Include(x => x.Category)
+                        .Include(x => x.DocumentType)
+                        .Include(x => x.AccessLevel)
+                        .Include(x => x.UploadedByUser)
+                        .Include(x => x.DocumentDepartments)
+                            .ThenInclude(dd => dd.Department)
+                        .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
     /// <summary>
@@ -77,6 +77,7 @@ public class DocumentRepository : IDocumentRepository
                     .Include(x => x.AccessLevel)
                     .Include(x => x.UploadedByUser)
                     .Include(x => x.DocumentDepartments)
+                        .ThenInclude(dd => dd.Department)
                     .AsNoTracking()
                     .AsQueryable();
 

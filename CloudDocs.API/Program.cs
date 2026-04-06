@@ -1,26 +1,12 @@
 // System imports
-
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using System.Text;
-using CloudDocs.Application.Common.Models;
-using CloudDocs.Infrastructure.Persistence;
-using CloudDocs.Infrastructure.Security;
-using CloudDocs.Infrastructure.Services;
-using CloudDocs.Infrastructure.Persistence.Repositories;
-
+using CloudDocs.API.Common;
 // Global Error Handling Middleware
 using CloudDocs.API.Extensions;
 using CloudDocs.Application.Common.Interfaces.Persistence;
-
 // Auth Imports
 using CloudDocs.Application.Common.Interfaces.Security;
 using CloudDocs.Application.Common.Interfaces.Services;
-
+using CloudDocs.Application.Common.Models;
 // Access Level Features
 using CloudDocs.Application.Features.AccessLevels.CreateAccessLevel;
 using CloudDocs.Application.Features.AccessLevels.DeactivateAccessLevel;
@@ -46,7 +32,13 @@ using CloudDocs.Application.Features.Categories.GetCategories;
 using CloudDocs.Application.Features.Categories.GetCategoryById;
 using CloudDocs.Application.Features.Categories.ReactivateCategory;
 using CloudDocs.Application.Features.Categories.UpdateCategory;
-
+// Deparments Features
+using CloudDocs.Application.Features.Departments.CreateDepartment;
+using CloudDocs.Application.Features.Departments.DeactivateDepartment;
+using CloudDocs.Application.Features.Departments.GetDepartmentById;
+using CloudDocs.Application.Features.Departments.GetDepartments;
+using CloudDocs.Application.Features.Departments.ReactivateDepartment;
+using CloudDocs.Application.Features.Departments.UpdateDepartment;
 // Documents Features
 using CloudDocs.Application.Features.Documents.DeactivateDocument;
 using CloudDocs.Application.Features.Documents.GetDocumentById;
@@ -54,6 +46,7 @@ using CloudDocs.Application.Features.Documents.GetDocumentFile;
 using CloudDocs.Application.Features.Documents.ReactivateDocument;
 using CloudDocs.Application.Features.Documents.RenameDocument;
 using CloudDocs.Application.Features.Documents.SearchDocuments;
+using CloudDocs.Application.Features.Documents.UpdateDocumentVisibility;
 using CloudDocs.Application.Features.Documents.UploadDocument;
 using CloudDocs.Application.Features.Documents.Versions.GetDocumentVersions;
 using CloudDocs.Application.Features.Documents.Versions.UploadDocumentVersion;
@@ -70,14 +63,18 @@ using CloudDocs.Application.Features.Users.GetUserById;
 using CloudDocs.Application.Features.Users.GetUsers;
 using CloudDocs.Application.Features.Users.ReactivateUser;
 using CloudDocs.Application.Features.Users.UpdateUser;
-
-// Deparments Features
-using CloudDocs.Application.Features.Departments.CreateDepartment;
-using CloudDocs.Application.Features.Departments.DeactivateDepartment;
-using CloudDocs.Application.Features.Departments.GetDepartmentById;
-using CloudDocs.Application.Features.Departments.GetDepartments;
-using CloudDocs.Application.Features.Departments.ReactivateDepartment;
-using CloudDocs.Application.Features.Departments.UpdateDepartment;
+using CloudDocs.Infrastructure.Persistence;
+using CloudDocs.Infrastructure.Persistence.Repositories;
+using CloudDocs.Infrastructure.Security;
+using CloudDocs.Infrastructure.Services;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -123,7 +120,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
 // JWT Authentication configuration
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection(JwtSettings.SectionName));
@@ -148,9 +144,44 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings.Issuer,
         ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtSettings.Secret))
+            Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+        ClockSkew = TimeSpan.Zero
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var authHeader = context.Request.Headers.Authorization.ToString();
+
+            if (!string.IsNullOrWhiteSpace(authHeader) &&
+                authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Token = authHeader["Bearer ".Length..].Trim();
+                return Task.CompletedTask;
+            }
+
+            var cookieSettings = context.HttpContext.RequestServices
+                .GetRequiredService<IOptions<AuthCookieSettings>>()
+                .Value;
+
+            var token = context.Request.Cookies[cookieSettings.AccessTokenCookieName];
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                context.Token = token;
+            }
+
+            return Task.CompletedTask;
+        }
     };
 });
+
+// AuthCookies
+builder.Services.Configure<AuthCookieSettings>(
+    builder.Configuration.GetSection(AuthCookieSettings.SectionName));
+
+builder.Services.AddScoped<AuthCookieHelper>();
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
@@ -217,6 +248,7 @@ builder.Services.AddScoped<ICreateAccessLevelService, CreateAccessLevelService>(
 builder.Services.AddScoped<IUpdateAccessLevelService, UpdateAccessLevelService>();
 builder.Services.AddScoped<IDeactivateAccessLevelService, DeactivateAccessLevelService>();
 builder.Services.AddScoped<IReactivateAccessLevelService, ReactivateAccessLevelService>();
+builder.Services.AddScoped<IUpdateDocumentVisibilityService, UpdateDocumentVisibilityService>();
 
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
@@ -267,12 +299,11 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:5173",
-                "https://localhost:5173",
-                "http://localhost:5007",
-                "https://localhost:7121"
+                "https://localhost:5173"
             )
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
