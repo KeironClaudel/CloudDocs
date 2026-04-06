@@ -16,6 +16,10 @@ CloudDocs is a backend API that allows organizations to:
 
 This project is designed as a scalable and maintainable backend system, suitable for real-world business use cases.
 
+Recent changes (short):
+- Document types and access levels were moved to configurable database entities so they can be managed at runtime.
+- Departments are modelled as entities and documents support a many-to-many relation to departments for visibility.
+
 ---
 
 ## 🧠 Architecture
@@ -42,6 +46,10 @@ CloudDocs
 - CQRS-style service separation  
 
 ---
+
+Notes about the updated domain model:
+- `AccessLevelEntity`, `DocumentTypeEntity`, and `Department` are domain entities under `CloudDocs.Domain.Entities` and persisted via EF in `CloudDocs.Infrastructure`.
+- The document visibility model changed: `Document` now relates to departments via `DocumentDepartment` (many-to-many). This impacts repositories and upload flow.
 
 ## 🛠️ Tech Stack
 
@@ -85,11 +93,17 @@ CloudDocs
   - Category  
   - Month / Year  
 
+Update notes (documents):
+- The upload contract now accepts `DocumentTypeId` and `AccessLevelId` (both GUIDs) and `DepartmentIds` (List<Guid>) when appropriate.
+- Access levels and document types are now configurable from the database rather than fixed enums.
+
 ### 🧾 Document Versioning
 
 - Automatic version 1 on upload  
 - Upload new versions  
 - Full version history per document  
+
+Response update: `DocumentResponse` now includes `AccessLevelId`, `AccessLevelName`, `AccessLevelCode` and `VisibleDepartments` (list of departments allowed to see the document).
 
 ### 🔍 Access Control
 
@@ -136,6 +150,15 @@ CloudDocs.API/appsettings.json
 dotnet ef database update \
 --project CloudDocs.Infrastructure \
 --startup-project CloudDocs.API
+```
+
+If you changed the model to move AccessLevel or DocumentType from enum to entity, create a migration first:
+
+```pwsh
+dotnet ef migrations add ReplaceAccessLevelEnumWithEntity \
+  --project .\CloudDocs.Infrastructure\CloudDocs.Infrastructure.csproj \
+  --startup-project .\CloudDocs.API\CloudDocs.API.csproj \
+  --output-dir Persistence/Migrations
 ```
 
 ### 4. Run the API
@@ -203,7 +226,6 @@ Run tests with:
 ```bash
 dotnet test
 ```
-
 ---
 
 ## 🧱 Key Design Decisions

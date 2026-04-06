@@ -203,13 +203,14 @@ public class UploadDocumentServiceTests
     {
         var categoryId = Guid.NewGuid();
         var userId = Guid.NewGuid();
+        var documentTypeId = Guid.NewGuid();
 
         var request = new UploadDocumentRequest(
             "test.pdf",
             "application/pdf",
             100,
             categoryId,
-            Guid.NewGuid(),
+            documentTypeId,
             null,
             false,
             Guid.NewGuid(),
@@ -223,6 +224,11 @@ public class UploadDocumentServiceTests
                 Name = "Contracts",
                 IsActive = true
             });
+
+        // ensure document type exists so the service continues to user lookup
+        _documentTypeRepositoryMock
+            .Setup(x => x.GetByIdAsync(documentTypeId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CloudDocs.Domain.Entities.DocumentTypeEntity { Id = documentTypeId, Name = "General", IsActive = true, RequiresExpiration = false });
 
         _userRepositoryMock
             .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -247,13 +253,15 @@ public class UploadDocumentServiceTests
         var categoryId = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
+        var documentTypeId = Guid.NewGuid();
+
         var request = new UploadDocumentRequest(
             "contract.pdf",
             "application/pdf",
             100,
             categoryId,
             // use the contract document type id from db
-            Guid.NewGuid(),
+            documentTypeId,
             null,
             false,
             Guid.NewGuid(),
@@ -267,6 +275,11 @@ public class UploadDocumentServiceTests
                 Name = "Contracts",
                 IsActive = true
             });
+
+        // ensure document type exists and requires expiration so the service validates expiration
+        _documentTypeRepositoryMock
+            .Setup(x => x.GetByIdAsync(documentTypeId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CloudDocs.Domain.Entities.DocumentTypeEntity { Id = documentTypeId, Name = "Contract", IsActive = true, RequiresExpiration = true });
 
         _userRepositoryMock
             .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -338,8 +351,8 @@ public class UploadDocumentServiceTests
         var accessLevelEntity = new AccessLevelEntity
         {
             Id = accessLevelId,
-            Name = "Internal Public",
-            Code = "INTERNAL_PUBLIC",
+            Name = "Department Only",
+            Code = "DEPARTMENT_ONLY",
             IsActive = true
         };
 
@@ -362,6 +375,14 @@ public class UploadDocumentServiceTests
             .Setup(x => x.GetByIdAsync(documentTypeId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(documentTypeEntity);
 
+        _accessLevelRepositoryMock
+            .Setup(x => x.GetByIdAsync(accessLevelId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(accessLevelEntity);
+
+        _departmentRepositoryMock
+            .Setup(x => x.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<Guid> ids, CancellationToken _) => new List<Department> { department });
+
         _fileStorageServiceMock
             .Setup(x => x.SaveFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Stream _, string fileName, CancellationToken _) => fileName);
@@ -379,8 +400,8 @@ public class UploadDocumentServiceTests
         result.DocumentTypeId.Should().Be(documentTypeId);
         result.DocumentTypeName.Should().Be("Contract");
         result.AccessLevelId.Should().Be(accessLevelId);
-        result.AccessLevelName.Should().Be("Internal Public");
-        result.AccessLevelCode.Should().Be("INTERNAL_PUBLIC");
+        result.AccessLevelName.Should().Be("Department Only");
+        result.AccessLevelCode.Should().Be("DEPARTMENT_ONLY");
         result.VisibleDepartments.Should().ContainSingle()
             .Which.Name.Should().Be("Finance");
         result.ExpirationDate.Should().Be(new DateTime(2026, 12, 31));

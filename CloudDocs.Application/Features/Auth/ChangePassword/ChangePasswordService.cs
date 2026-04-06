@@ -55,6 +55,10 @@ public class ChangePasswordService : IChangePasswordService
         if (_passwordHasher.Verify(request.NewPassword, user.PasswordHash))
             throw new BadRequestException("New password must be different from the current password.");
 
+        // Basic password strength validation (service-level). More complex rules may be enforced by validators.
+        if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 8)
+            throw new BadRequestException("New password does not meet security requirements.");
+
         user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
         user.UpdatedAt = DateTime.UtcNow;
 

@@ -114,6 +114,9 @@ public class UploadDocumentService : IUploadDocumentService
         var documentType = await _documentTypeRepository.GetByIdAsync(request.DocumentTypeId, cancellationToken);
         if (documentType is null || !documentType.IsActive)
             throw new NotFoundException("Document type not found or inactive.");
+        // If the document type requires an expiration date or pending definition, validate it
+        if (documentType.RequiresExpiration && !request.ExpirationDate.HasValue && !request.ExpirationDatePendingDefinition)
+            throw new BadRequestException("Expiration date or pending definition is required for this document type.");
 
         var user = await _userRepository.GetByIdAsync(currentUserId, cancellationToken);
         if (user is null || !user.IsActive)
@@ -211,6 +214,12 @@ public class UploadDocumentService : IUploadDocumentService
                                     null,
                                     cancellationToken);
 
+        var visibleDepartments = selectedDepartments.Count > 0
+            ? selectedDepartments.Select(d => new DocumentDepartmentResponse(d.Id, d.Name)).ToList()
+            : document.DocumentDepartments
+                .Select(dd => new DocumentDepartmentResponse(dd.DepartmentId, dd.Department?.Name ?? string.Empty))
+                .ToList();
+
         return new DocumentResponse(
             document.Id,
             document.OriginalFileName,
@@ -231,11 +240,7 @@ public class UploadDocumentService : IUploadDocumentService
             accessLevel.Id,
             accessLevel.Name,
             accessLevel.Code,
-            document.DocumentDepartments
-                .Select(dd => new DocumentDepartmentResponse(
-                    dd.DepartmentId,
-                    dd.Department.Name))
-                .ToList(),
+            visibleDepartments,
             document.IsActive,
             document.CreatedAt);
     }
