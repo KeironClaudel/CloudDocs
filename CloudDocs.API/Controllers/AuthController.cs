@@ -1,8 +1,10 @@
 using CloudDocs.API.Common;
+using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Features.Auth.ChangePassword;
 using CloudDocs.Application.Features.Auth.ForgotPassword;
 using CloudDocs.Application.Features.Auth.Login;
 using CloudDocs.Application.Features.Auth.Logout;
+using CloudDocs.Application.Features.Auth.Me;
 using CloudDocs.Application.Features.Auth.RefreshToken;
 using CloudDocs.Application.Features.Auth.ResetPassword;
 using Microsoft.AspNetCore.Authorization;
@@ -25,6 +27,7 @@ public class AuthController : ControllerBase
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly ILogoutService _logoutService;
     private readonly AuthCookieHelper _authCookieHelper;
+    private readonly IUserRepository _userRepository;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AuthController"/> class.
@@ -34,6 +37,8 @@ public class AuthController : ControllerBase
     /// <param name="resetPasswordService">The reset password service.</param>
     /// <param name="changePasswordService">The change password service.</param>
     /// <param name="refreshTokenService">The refresh token service.</param>
+    /// <param name="authCookieHelper">The Cookie helper.</param>
+    /// <param name="userRepository"> The userRepository interface</param>
     /// <param name="logoutService">The logout service.</param>
     public AuthController(
     ILoginService loginService,
@@ -42,6 +47,7 @@ public class AuthController : ControllerBase
     IChangePasswordService changePasswordService,
     IRefreshTokenService refreshTokenService,
     AuthCookieHelper authCookieHelper,
+    IUserRepository userRepository,
     ILogoutService logoutService)
     {
         _loginService = loginService;
@@ -50,7 +56,38 @@ public class AuthController : ControllerBase
         _changePasswordService = changePasswordService;
         _refreshTokenService = refreshTokenService;
         _authCookieHelper = authCookieHelper;
+        _userRepository = userRepository;
         _logoutService = logoutService;
+    }
+
+    /// <summary>
+    /// Retrieves information about the currently authenticated user.
+    /// </summary>
+    /// <remarks>This endpoint requires authentication. The response includes user information such as ID,
+    /// full name, email, and role. If the user's authentication token is invalid or the user is inactive, the request
+    /// is denied.</remarks>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>An HTTP 200 response containing the current user's details if authentication and user status checks succeed;
+    /// otherwise, an HTTP 401 response if the user is not authenticated or is inactive.</returns>
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me(CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Invalid user token." });
+
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user is null || !user.IsActive)
+            return Unauthorized(new { message = "User not found or inactive." });
+
+        var response = new CurrentUserResponse(
+            user.Id,
+            user.FullName,
+            user.Email,
+            user.Role.Name);
+
+        return Ok(response);
     }
 
     /// <summary>
