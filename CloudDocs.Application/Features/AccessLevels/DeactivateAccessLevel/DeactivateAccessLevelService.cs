@@ -1,4 +1,5 @@
-﻿using CloudDocs.Application.Common.Interfaces.Persistence;
+﻿using CloudDocs.Application.Common.Exceptions;
+using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Services;
 
 namespace CloudDocs.Application.Features.AccessLevels.DeactivateAccessLevel;
@@ -24,6 +25,18 @@ public class DeactivateAccessLevelService : IDeactivateAccessLevelService
         var entity = await _accessLevelRepository.GetByIdAsync(id, cancellationToken);
         if (entity is null)
             return false;
+
+        var protectedCodes = new[]
+            {
+                "INTERNAL_PUBLIC",
+                "PRIVATE",
+                "ADMIN_ONLY",
+                "OWNER_ONLY",
+                "DEPARTMENT_ONLY"
+            };
+
+        if (protectedCodes.Contains(entity.Code, StringComparer.OrdinalIgnoreCase))
+            throw new BadRequestException("Core access levels cannot be deactivated.");
 
         entity.IsActive = false;
         entity.DeletedAt = DateTime.UtcNow;
