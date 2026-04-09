@@ -8,15 +8,16 @@ A robust document management system (DMS) built with .NET 8, following Clean Arc
 
 CloudDocs is a backend API that allows organizations to:
 
-- Store and manage documents securely  
-- Maintain version history of documents  
-- Control access based on roles, ownership, and departments  
-- Track actions through audit logs  
-- Authenticate users using JWT with refresh tokens  
+- Store and manage documents securely
+- Maintain version history of documents
+- Control access based on roles, ownership, and departments
+- Track actions through audit logs
+- Authenticate users using JWT with refresh tokens
 
 This project is designed as a scalable and maintainable backend system, suitable for real-world business use cases.
 
 Recent changes (short):
+
 - Document types and access levels were moved to configurable database entities so they can be managed at runtime.
 - Departments are modelled as entities and documents support a many-to-many relation to departments for visibility.
 
@@ -38,41 +39,42 @@ CloudDocs
 
 ### Patterns used
 
-- Clean Architecture  
-- Repository Pattern  
-- Unit of Work  
-- Dependency Injection  
-- Middleware for exception handling  
-- CQRS-style service separation  
+- Clean Architecture
+- Repository Pattern
+- Unit of Work
+- Dependency Injection
+- Middleware for exception handling
+- CQRS-style service separation
 
 ---
 
 Notes about the updated domain model:
+
 - `AccessLevelEntity`, `DocumentTypeEntity`, and `Department` are domain entities under `CloudDocs.Domain.Entities` and persisted via EF in `CloudDocs.Infrastructure`.
 - The document visibility model changed: `Document` now relates to departments via `DocumentDepartment` (many-to-many). This impacts repositories and upload flow.
 
 ## 🛠️ Tech Stack
 
-- .NET 8  
-- C#  
-- Entity Framework Core  
-- SQL Server  
-- JWT Authentication + Refresh Tokens  
-- BCrypt (Password Hashing)  
-- xUnit + Moq (Testing)  
-- FluentAssertions  
-- Swagger / OpenAPI  
+- .NET 8
+- C#
+- Entity Framework Core
+- SQL Server
+- JWT Authentication + Refresh Tokens
+- BCrypt (Password Hashing)
+- xUnit + Moq (Testing)
+- FluentAssertions
+- Swagger / OpenAPI
 
 ---
 
 ## 🔐 Authentication & Security
 
-- JWT-based authentication  
-- Refresh token mechanism  
-- Password hashing with BCrypt  
-- Account lockout after multiple failed attempts  
-- Role-based authorization (Admin / User)  
-- Fine-grained document access control  
+- JWT-based authentication
+- Refresh token mechanism
+- Password hashing with BCrypt
+- Account lockout after multiple failed attempts
+- Role-based authorization (Admin / User)
+- Fine-grained document access control
 
 ---
 
@@ -80,28 +82,29 @@ Notes about the updated domain model:
 
 ### 👤 Users
 
-- Create, update, deactivate users  
-- Role assignment  
-- Department support  
+- Create, update, deactivate users
+- Role assignment
+- Department support
 
 ### 📄 Documents
 
-- Upload PDF documents  
-- Metadata support (category, type, expiration, etc.)  
+- Upload PDF documents
+- Metadata support (category, type, expiration, etc.)
 - Search with filters:
-  - Name  
-  - Category  
-  - Month / Year  
+  - Name
+  - Category
+  - Month / Year
 
 Update notes (documents):
+
 - The upload contract now accepts `DocumentTypeId` and `AccessLevelId` (both GUIDs) and `DepartmentIds` (List<Guid>) when appropriate.
 - Access levels and document types are now configurable from the database rather than fixed enums.
 
 ### 🧾 Document Versioning
 
-- Automatic version 1 on upload  
-- Upload new versions  
-- Full version history per document  
+- Automatic version 1 on upload
+- Upload new versions
+- Full version history per document
 
 Response update: `DocumentResponse` now includes `AccessLevelId`, `AccessLevelName`, `AccessLevelCode` and `VisibleDepartments` (list of departments allowed to see the document).
 
@@ -109,19 +112,19 @@ Response update: `DocumentResponse` now includes `AccessLevelId`, `AccessLevelNa
 
 Documents support different access levels:
 
-- **InternalPublic** → All authenticated users  
-- **Private** → Owner only  
-- **OwnerOnly** → Owner only  
-- **AdminOnly** → Admin users only  
-- **DepartmentOnly** → Same department or admin  
+- **InternalPublic** → All authenticated users
+- **Private** → Owner only
+- **OwnerOnly** → Owner only
+- **AdminOnly** → Admin users only
+- **DepartmentOnly** → Same department or admin
 
 ### 📊 Audit Logs
 
 Tracks:
 
-- Login attempts  
-- Document actions  
-- Token usage  
+- Login attempts
+- Document actions
+- Token usage
 
 Read-only audit queries included.
 
@@ -179,28 +182,28 @@ https://localhost:xxxx/swagger
 
 ### Auth
 
-- `POST /api/auth/login`  
-- `POST /api/auth/refresh-token`  
-- `POST /api/auth/logout`  
+- `POST /api/auth/login`
+- `POST /api/auth/refresh-token`
+- `POST /api/auth/logout`
 
 ### Documents
 
-- `POST /api/documents/upload`  
-- `GET /api/documents`  
-- `GET /api/documents/{id}`  
-- `GET /api/documents/{id}/preview`  
-- `GET /api/documents/{id}/download`  
+- `POST /api/documents/upload`
+- `GET /api/documents`
+- `GET /api/documents/{id}`
+- `GET /api/documents/{id}/preview`
+- `GET /api/documents/{id}/download`
 
 ### Versions
 
-- `GET /api/documents/{id}/versions`  
-- `POST /api/documents/{id}/versions`  
+- `GET /api/documents/{id}/versions`
+- `POST /api/documents/{id}/versions`
 
 ### Users
 
-- `POST /api/users`  
-- `PUT /api/users/{id}`  
-- `DELETE /api/users/{id}`  
+- `POST /api/users`
+- `PUT /api/users/{id}`
+- `DELETE /api/users/{id}`
 
 ---
 
@@ -208,24 +211,96 @@ https://localhost:xxxx/swagger
 
 Unit tests are implemented using:
 
-- xUnit  
-- Moq  
-- FluentAssertions  
+- **xUnit** - Test framework
+- **Moq** - Mocking library
+- **FluentAssertions** - Fluent assertion API
 
-### Covered services
+### Test Coverage
 
-- LoginService  
-- CreateUserService  
-- ChangePasswordService  
-- RefreshTokenService  
-- UploadDocumentService  
-- DocumentAccessService  
+**71 test cases** covering critical business logic and edge cases across 17 services:
 
-Run tests with:
+#### Authentication & Security (8 tests)
+
+- `LoginServiceTests` - User authentication, account lockout, token generation
+- `LogoutServiceTests` - Token revocation, graceful failure handling
+- `RefreshTokenServiceTests` - Token refresh and validation
+- `ChangePasswordServiceTests` - Password update with validation
+- `ForgotPasswordServiceTests` - Password reset flow, email delivery
+- `ResetPasswordServiceTests` - Token validation, password hashing
+
+#### Users (8 tests)
+
+- `CreateUserServiceTests` - User creation with validation
+- `UpdateUserServiceTests` - User updates, email uniqueness, role changes
+- `GetUsersServiceTests` - User listing and filtering
+
+#### Documents (8 tests)
+
+- `UploadDocumentServiceTests` - File validation, storage, versioning
+- `SearchDocumentsServiceTests` - Search filtering, access control
+- `RenameDocumentServiceTests` - File renaming with permissions
+- `DocumentAccessServiceTests` - Access level validation (Admin, Owner, Public, Department)
+
+#### Configuration (10 tests)
+
+- `CreateAccessLevelServiceTests` - Access level creation
+- `UpdateAccessLevelServiceTests` - Access level updates, duplicate handling
+- `CreateCategoryServiceTests` - Category creation
+- `UpdateCategoryServiceTests` - Category updates with validation
+- `CreateDocumentTypeServiceTests` - Document type creation
+- `CreateDepartmentServiceTests` - Department creation
+- `UpdateDepartmentServiceTests` - Department updates
+
+### Test Scenarios
+
+Each test validates:
+
+- ✅ **Happy paths** - Valid inputs produce expected results
+- ✅ **Error cases** - Invalid inputs throw appropriate exceptions
+- ✅ **Edge cases** - Boundary conditions (empty strings, null values, duplicates)
+- ✅ **Permissions** - Role-based and ownership-based access control
+- ✅ **Audit trails** - Critical operations are logged
+- ✅ **State changes** - Database updates and timestamps are correct
+
+### Run Tests
 
 ```bash
+# Run all tests
 dotnet test
+
+# Run with verbose output
+dotnet test --verbosity=normal
+
+# Run specific test file
+dotnet test --filter "FullyQualifiedName~LoginServiceTests"
+
+# Run and get code coverage
+dotnet test /p:CollectCoverage=true /p:CoverageFormat=opencover
 ```
+
+### Test Structure
+
+Tests follow the **Arrange-Act-Assert** pattern:
+
+```csharp
+[Fact]
+public async Task LoginAsync_ShouldThrowUnauthorized_WhenUserDoesNotExist()
+{
+    // Arrange
+    var request = new LoginRequest("missing@test.com", "Password123!");
+    _userRepositoryMock.Setup(x => x.GetByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
+        .ReturnsAsync((User?)null);
+
+    // Act
+    var service = CreateService();
+    var act = async () => await service.LoginAsync(request);
+
+    // Assert
+    await act.Should().ThrowAsync<UnauthorizedException>()
+        .WithMessage("Invalid credentials.");
+}
+```
+
 ---
 
 ## 🧱 Key Design Decisions
@@ -242,8 +317,8 @@ Centralized error handling with consistent API responses.
 
 Structured logging using `ILogger` for:
 
-- Warnings (validation/auth issues)  
-- Errors (unexpected failures)  
+- Warnings (validation/auth issues)
+- Errors (unexpected failures)
 
 ### ✅ Document Versioning
 
@@ -253,17 +328,19 @@ Prevents data loss and enables auditability of file changes.
 
 ## 📈 Future Improvements
 
-- File storage integration (AWS S3 / Azure Blob)  
-- Caching (Redis)  
-- Rate limiting  
-- Functional email service
+- Pagination at database level with access filters
+- File storage integration (AWS S3 / Azure Blob)
+- Role-based policy authorization
+- Caching (Redis)
+- Rate limiting
+- Full integration tests
 
 ---
 
 ## 👨‍💻 Author
 
 Developed by **Keiron**  
-Backend Developer focused on .NET, APIs, and Data Systems  
+Backend Developer focused on .NET, APIs, and Data Systems
 
 ---
 
@@ -271,7 +348,7 @@ Backend Developer focused on .NET, APIs, and Data Systems
 
 This project demonstrates:
 
-- Strong backend architecture design  
-- Secure authentication flows  
-- Real-world business logic implementation  
-- Clean and testable codebase  
+- Strong backend architecture design
+- Secure authentication flows
+- Real-world business logic implementation
+- Clean and testable codebase
