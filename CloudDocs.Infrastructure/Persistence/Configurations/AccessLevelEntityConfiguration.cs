@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CloudDocs.Infrastructure.Persistence.Configurations;
+
 public class AccessLevelEntityConfiguration : IEntityTypeConfiguration<AccessLevelEntity>
 {
     public void Configure(EntityTypeBuilder<AccessLevelEntity> builder)
