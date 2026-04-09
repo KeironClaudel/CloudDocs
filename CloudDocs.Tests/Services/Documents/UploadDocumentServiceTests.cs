@@ -228,7 +228,7 @@ public class UploadDocumentServiceTests
         // ensure document type exists so the service continues to user lookup
         _documentTypeRepositoryMock
             .Setup(x => x.GetByIdAsync(documentTypeId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CloudDocs.Domain.Entities.DocumentTypeEntity { Id = documentTypeId, Name = "General", IsActive = true, RequiresExpiration = false });
+            .ReturnsAsync(new CloudDocs.Domain.Entities.DocumentTypeEntity { Id = documentTypeId, Name = "General", IsActive = true });
 
         _userRepositoryMock
             .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -279,7 +279,7 @@ public class UploadDocumentServiceTests
         // ensure document type exists and requires expiration so the service validates expiration
         _documentTypeRepositoryMock
             .Setup(x => x.GetByIdAsync(documentTypeId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CloudDocs.Domain.Entities.DocumentTypeEntity { Id = documentTypeId, Name = "Contract", IsActive = true, RequiresExpiration = true });
+            .ReturnsAsync(new CloudDocs.Domain.Entities.DocumentTypeEntity { Id = documentTypeId, Name = "Contract", IsActive = true });
 
         _userRepositoryMock
             .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -290,6 +290,16 @@ public class UploadDocumentServiceTests
                 Email = "keiron@test.com",
                 IsActive = true,
                 Role = new Role { Name = "Admin" }
+            });
+
+        _accessLevelRepositoryMock
+            .Setup(x => x.GetByIdAsync(request.AccessLevelId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CloudDocs.Domain.Entities.AccessLevelEntity
+            {
+                Id = request.AccessLevelId,
+                Name = "Internal Public",
+                Code = "INTERNAL_PUBLIC",
+                IsActive = true
             });
 
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
