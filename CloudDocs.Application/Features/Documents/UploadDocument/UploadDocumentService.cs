@@ -114,9 +114,10 @@ public class UploadDocumentService : IUploadDocumentService
         var documentType = await _documentTypeRepository.GetByIdAsync(request.DocumentTypeId, cancellationToken);
         if (documentType is null || !documentType.IsActive)
             throw new NotFoundException("Document type not found or inactive.");
+
         // If the document type requires an expiration date or pending definition, validate it
-        if (documentType.RequiresExpiration && !request.ExpirationDate.HasValue && !request.ExpirationDatePendingDefinition)
-            throw new BadRequestException("Expiration date or pending definition is required for this document type.");
+        //if (documentType.RequiresExpiration && !request.ExpirationDate.HasValue && !request.ExpirationDatePendingDefinition)
+        //    throw new BadRequestException("Expiration date or pending definition is required for this document type.");
 
         var user = await _userRepository.GetByIdAsync(currentUserId, cancellationToken);
         if (user is null || !user.IsActive)

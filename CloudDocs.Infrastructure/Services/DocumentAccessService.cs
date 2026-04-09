@@ -27,7 +27,6 @@ public class DocumentAccessService : IDocumentAccessService
             return accessCode switch
             {
                 "INTERNAL_PUBLIC" => true,
-                "PRIVATE" => document.UploadedByUserId == currentUser.Id,
                 "ADMIN_ONLY" => false,
                 "OWNER_ONLY" => document.UploadedByUserId == currentUser.Id,
                 "DEPARTMENT_ONLY" => 
