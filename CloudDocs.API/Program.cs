@@ -1,5 +1,8 @@
 // System imports
 using CloudDocs.API.Common;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
+using Microsoft.EntityFrameworkCore;
+
 // Global Error Handling Middleware
 using CloudDocs.API.Extensions;
 using CloudDocs.Application.Common.Interfaces.Persistence;
@@ -70,7 +73,6 @@ using CloudDocs.Infrastructure.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -81,9 +83,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Database configuration
+// Database SUPABASE configuration
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Swagger configuration for JWT Authentication
 builder.Services.AddSwaggerGen(options =>
@@ -206,6 +208,11 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 
+// Azure Blob Settings
+builder.Services.Configure<AzureBlobSettings>(
+    builder.Configuration.GetSection(AzureBlobSettings.SectionName));
+
+
 // Category services
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IGetCategoriesService, GetCategoriesService>();
@@ -220,7 +227,14 @@ builder.Services.Configure<FileStorageSettings>(
     builder.Configuration.GetSection(FileStorageSettings.SectionName));
 
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
-builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
+// LOCAL
+// builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
+// AZURE BLOB
+builder.Services.AddScoped<IFileStorageService, AzureBlobFileStorageService>();
+
+
 builder.Services.AddScoped<IUploadDocumentService, UploadDocumentService>();
 builder.Services.AddScoped<ISearchDocumentsService, SearchDocumentsService>();
 builder.Services.AddScoped<IGetDocumentByIdService, GetDocumentByIdService>();
