@@ -315,8 +315,7 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "http://localhost:5173",
                 "https://localhost:5173",
-                "http://localhost:5174",
-                "https://localhost:5174"
+                "https://clouddocs-frontend.vercel.app"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -325,12 +324,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+app.UseSwagger();
+app.UseSwaggerUI();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 // Middleware pipeline configuration
 app.UseGlobalExceptionHandling();
