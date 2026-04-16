@@ -73,6 +73,13 @@ public class AppDbContext : DbContext
     /// Gets the set of clients in the context for querying and saving.
     /// </summary>
     public DbSet<Client> Clients => Set<Client>();
+
+    /// <summary>
+    /// Gets the sent email logs.
+    /// </summary>
+    public DbSet<SentEmailLog> SentEmailLogs => Set<SentEmailLog>();
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

@@ -62,4 +62,21 @@ public class DemoPolicyService : IDemoPolicyService
 
         return Task.CompletedTask;
     }
+
+    public Task ValidateSendEmailAsync(
+    User user,
+    int currentEmailCount,
+    CancellationToken cancellationToken = default)
+    {
+        if (!IsDemoUser(user))
+            return Task.CompletedTask;
+
+        if (currentEmailCount >= _settings.MaxEmailsPerDemoUser)
+        {
+            throw new BadRequestException(
+                $"The public demo allows a maximum of {_settings.MaxEmailsPerDemoUser} sent emails.");
+        }
+
+        return Task.CompletedTask;
+    }
 }

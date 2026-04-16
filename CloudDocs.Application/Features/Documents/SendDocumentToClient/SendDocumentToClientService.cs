@@ -1,6 +1,7 @@
 ﻿using CloudDocs.Application.Common.Exceptions;
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Services;
+using CloudDocs.Domain.Entities;
 
 namespace CloudDocs.Application.Features.Documents.SendDocumentToClient;
 
@@ -10,17 +11,29 @@ public class SendDocumentToClientService : ISendDocumentToClientService
     private readonly IFileStorageService _fileStorageService;
     private readonly IEmailService _emailService;
     private readonly IAuditService _auditService;
+    private readonly IUserRepository _userRepository;
+    private readonly IDemoPolicyService _demoPolicyService;
+    private readonly ISentEmailLogRepository _sentEmailLogRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public SendDocumentToClientService(
         IDocumentRepository documentRepository,
+        IUserRepository userRepository,
         IFileStorageService fileStorageService,
         IEmailService emailService,
-        IAuditService auditService)
+        IAuditService auditService,
+        IDemoPolicyService demoPolicyService,
+        ISentEmailLogRepository sentEmailLogRepository,
+        IUnitOfWork unitOfWork)
     {
         _documentRepository = documentRepository;
+        _userRepository = userRepository;
         _fileStorageService = fileStorageService;
         _emailService = emailService;
         _auditService = auditService;
+        _demoPolicyService = demoPolicyService;
+        _sentEmailLogRepository = sentEmailLogRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task ExecuteAsync(
@@ -53,6 +66,21 @@ public class SendDocumentToClientService : ISendDocumentToClientService
             ? $"Dear client,\n\nPlease find attached the document '{document.OriginalFileName}{document.FileExtension}'."
             : request.Message.Trim();
 
+
+        var currentUser = await _userRepository.GetByIdAsync(currentUserId, cancellationToken);
+
+        if (currentUser is null || !currentUser.IsActive)
+            throw new NotFoundException("Current user not found or inactive.");
+
+        var currentEmailCount = await _sentEmailLogRepository.CountByUserAsync(
+            currentUser.Id,
+            cancellationToken);
+
+        await _demoPolicyService.ValidateSendEmailAsync(
+            currentUser,
+            currentEmailCount,
+            cancellationToken);
+
         await _emailService.SendAsync(
             document.Client.Email,
             subject,
@@ -71,5 +99,18 @@ public class SendDocumentToClientService : ISendDocumentToClientService
             $"Document sent to client: {document.Client.Email}",
             null,
             cancellationToken);
+
+        var sentEmailLog = new SentEmailLog
+        {
+            Id = Guid.NewGuid(),
+            SentByUserId = currentUser.Id,
+            DocumentId = document.Id,
+            RecipientEmail = document.Client.Email!,
+            Subject = subject,
+            SentAt = DateTime.UtcNow
+        };
+
+        await _sentEmailLogRepository.AddAsync(sentEmailLog, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

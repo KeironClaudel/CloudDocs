@@ -22,4 +22,9 @@ public interface IDemoPolicyService
         long fileSize,
         int currentDocumentCount,
         CancellationToken cancellationToken = default);
+
+    Task ValidateSendEmailAsync(
+    User user,
+    int currentEmailCount,
+    CancellationToken cancellationToken = default);
 }

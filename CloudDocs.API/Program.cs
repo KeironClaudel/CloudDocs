@@ -310,6 +310,10 @@ builder.Services.Configure<FrontendSettings>(
 builder.Services.Configure<SmtpSettings>(
     builder.Configuration.GetSection(SmtpSettings.SectionName));
 
+builder.Services.AddScoped<ISendDocumentToClientService, SendDocumentToClientService>();
+
+builder.Services.AddScoped<ISentEmailLogRepository, SentEmailLogRepository>();
+
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 builder.Services.AddScoped<ISendDocumentToClientService, SendDocumentToClientService>();
