@@ -27,6 +27,7 @@ public class UploadDocumentServiceTests
     private readonly Mock<IDepartmentRepository> _departmentRepositoryMock = new();
     private readonly Mock<IAuditService> _auditServiceMock = new();
     private readonly Mock<IDemoPolicyService> _demoPolicyServiceMock = new();
+    private readonly Mock<IClientRepository> _clientRepositoryMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
     private readonly FileStorageSettings _fileStorageSettings = new()
@@ -51,6 +52,7 @@ public class UploadDocumentServiceTests
         _accessLevelRepositoryMock.Object,
         _departmentRepositoryMock.Object,
         _unitOfWorkMock.Object,
+        _clientRepositoryMock.Object,
         _demoPolicyServiceMock.Object,
         NullLogger<UploadDocumentService>.Instance);
     }
@@ -71,6 +73,7 @@ public class UploadDocumentServiceTests
             null,
             false,
             Guid.NewGuid(),
+            Guid.Empty,
             null);
 
         using var stream = new MemoryStream();
@@ -98,6 +101,7 @@ public class UploadDocumentServiceTests
             null,
             false,
             Guid.NewGuid(),
+            Guid.Empty,
             null);
 
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
@@ -125,6 +129,7 @@ public class UploadDocumentServiceTests
             null,
             false,
             Guid.NewGuid(),
+            Guid.Empty,
             null);
 
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
@@ -152,6 +157,7 @@ public class UploadDocumentServiceTests
             null,
             false,
             Guid.NewGuid(),
+            Guid.Empty,
             null);
 
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
@@ -181,6 +187,7 @@ public class UploadDocumentServiceTests
             null,
             false,
             Guid.NewGuid(),
+            Guid.Empty,
             null);
 
         _categoryRepositoryMock
@@ -216,6 +223,7 @@ public class UploadDocumentServiceTests
             null,
             false,
             Guid.NewGuid(),
+            Guid.Empty,
             null);
 
         _categoryRepositoryMock
@@ -267,6 +275,7 @@ public class UploadDocumentServiceTests
             null,
             false,
             Guid.NewGuid(),
+            Guid.Empty,
             null);
 
         _categoryRepositoryMock
@@ -335,6 +344,7 @@ public class UploadDocumentServiceTests
             new DateTime(2026, 12, 31),
             false,
             accessLevelId, // Updated access level
+            Guid.Empty,
             new List<Guid> { departmentId }); // Updated department list
 
         var category = new Category

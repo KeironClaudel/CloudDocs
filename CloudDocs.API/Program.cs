@@ -79,7 +79,13 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 
 // Client features
-
+using CloudDocs.Application.Features.Clients.CreateClient;
+using CloudDocs.Application.Features.Clients.DeactivateClient;
+using CloudDocs.Application.Features.Clients.GetClientById;
+using CloudDocs.Application.Features.Clients.GetClients;
+using CloudDocs.Application.Features.Clients.ReactivateClient;
+using CloudDocs.Application.Features.Clients.SearchClients;
+using CloudDocs.Application.Features.Clients.UpdateClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -284,6 +290,17 @@ builder.Services.AddScoped<ICreateDepartmentService, CreateDepartmentService>();
 builder.Services.AddScoped<IUpdateDepartmentService, UpdateDepartmentService>();
 builder.Services.AddScoped<IDeactivateDepartmentService, DeactivateDepartmentService>();
 builder.Services.AddScoped<IReactivateDepartmentService, ReactivateDepartmentService>();
+
+// Client services
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
+
+builder.Services.AddScoped<IGetClientsService, GetClientsService>();
+builder.Services.AddScoped<IGetClientByIdService, GetClientByIdService>();
+builder.Services.AddScoped<ISearchClientsService, SearchClientsService>();
+builder.Services.AddScoped<ICreateClientService, CreateClientService>();
+builder.Services.AddScoped<IUpdateClientService, UpdateClientService>();
+builder.Services.AddScoped<IDeactivateClientService, DeactivateClientService>();
+builder.Services.AddScoped<IReactivateClientService, ReactivateClientService>();
 
 // Email service
 builder.Services.Configure<FrontendSettings>(
