@@ -1,7 +1,7 @@
 namespace CloudDocs.Application.Common.Models;
 
 /// <summary>
-/// Represents configuration settings for file storage.
+/// Represents local file storage configuration settings.
 /// </summary>
 public class FileStorageSettings
 {

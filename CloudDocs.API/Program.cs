@@ -223,9 +223,6 @@ builder.Services.AddScoped<IDeactivateCategoryService, DeactivateCategoryService
 builder.Services.AddScoped<IReactivateCategoryService, ReactivateCategoryService>();
 
 // Document services
-builder.Services.Configure<FileStorageSettings>(
-    builder.Configuration.GetSection(FileStorageSettings.SectionName));
-
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
 // Demo policy service
@@ -234,11 +231,23 @@ builder.Services.Configure<DemoSettings>(
 
 builder.Services.AddScoped<IDemoPolicyService, DemoPolicyService>();
 
-// LOCAL
-// builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+// File storage service configuration based on appsettings
+builder.Services.Configure<FileStorageSettings>(
+    builder.Configuration.GetSection(FileStorageSettings.SectionName));
 
-// AZURE BLOB
-builder.Services.AddScoped<IFileStorageService, AzureBlobFileStorageService>();
+builder.Services.Configure<AzureBlobSettings>(
+    builder.Configuration.GetSection(AzureBlobSettings.SectionName));
+
+var storageProvider = builder.Configuration["Storage:Provider"];
+
+if (string.Equals(storageProvider, "AzureBlob", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddScoped<IFileStorageService, AzureBlobFileStorageService>();
+}
+else
+{
+    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+}
 
 
 builder.Services.AddScoped<IUploadDocumentService, UploadDocumentService>();
