@@ -56,7 +56,7 @@ public class DocumentsController : ControllerBase
     /// <param name="reactivateDocumentService">The reactivate document service.</param>
     public DocumentsController(
     IUploadDocumentService uploadDocumentService,
-    ISearchDocumentsService searchDocumentsService,
+    ISearchDocumentsService searchDocumentsService,fix:
     IGetDocumentByIdService getDocumentByIdService,
     IRenameDocumentService renameDocumentService,
     IDeactivateDocumentService deactivateDocumentService,
@@ -65,7 +65,7 @@ public class DocumentsController : ControllerBase
     IUploadDocumentVersionService uploadDocumentVersionService,
     IUpdateDocumentVisibilityService updateDocumentVisibilityService,
     IUserRepository userRepository,
-    ISendDocumentToClientService sendDocumentToClientService
+    ISendDocumentToClientService sendDocumentToClientService,
     IReactivateDocumentService reactivateDocumentService    )
     {
         _uploadDocumentService = uploadDocumentService;
