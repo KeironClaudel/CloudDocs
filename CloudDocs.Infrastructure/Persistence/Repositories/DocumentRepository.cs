@@ -32,12 +32,12 @@ public class DocumentRepository : IDocumentRepository
     {
         return await _context.Documents
                         .Include(x => x.Category)
+                        .Include(x => x.Client)
                         .Include(x => x.DocumentType)
                         .Include(x => x.AccessLevel)
                         .Include(x => x.UploadedByUser)
                         .Include(x => x.DocumentDepartments)
                             .ThenInclude(dd => dd.Department)
-                        .Include(x => x.Client)
                         .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
@@ -74,12 +74,12 @@ public class DocumentRepository : IDocumentRepository
     {
         var query = _context.Documents
                     .Include(x => x.Category)
+                    .Include(x => x.Client)
                     .Include(x => x.DocumentType)
                     .Include(x => x.AccessLevel)
                     .Include(x => x.UploadedByUser)
                     .Include(x => x.DocumentDepartments)
                         .ThenInclude(dd => dd.Department)
-                    .Include(x => x.Client)
                     .AsNoTracking()
                     .AsQueryable();
 
@@ -96,6 +96,9 @@ public class DocumentRepository : IDocumentRepository
 
         if (request.CategoryId.HasValue)
             query = query.Where(x => x.CategoryId == request.CategoryId.Value);
+
+        if (request.ClientId.HasValue)
+            query = query.Where(x => x.ClientId == request.ClientId.Value);
 
         if (request.Month.HasValue)
             query = query.Where(x => x.Month == request.Month.Value);

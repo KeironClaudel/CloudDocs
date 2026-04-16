@@ -17,6 +17,10 @@ public class UploadDocumentFormRequest
     /// </summary>
     public Guid CategoryId { get; set; }
     /// <summary>
+    /// Gets or sets the client id.
+    /// </summary>
+    public Guid ClientId { get; set; }
+    /// <summary>
     /// Gets or sets the document type.
     /// </summary>
     public Guid DocumentTypeId { get; set; }

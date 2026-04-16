@@ -7,9 +7,10 @@ namespace CloudDocs.Application.Features.Documents.Common;
 /// </summary>
 /// <param name="Name">The name.</param>
 /// <param name="CategoryId">The category id identifier.</param>
+/// <param name="ClientId">The client id identifier.</param>
 /// <param name="Month">The month.</param>
 /// <param name="Year">The year.</param>
-/// <param name="DocumentType">The document type.</param>
+/// <param name="DocumentTypeId">The document type id identifier.</param>
 /// <param name="ExpirationPendingDefinition">The expiration pending definition.</param>
 /// <param name="IncludeInactive">The include inactive.</param>
 /// <param name="Page">The page number.</param>
@@ -17,6 +18,7 @@ namespace CloudDocs.Application.Features.Documents.Common;
 public sealed record SearchDocumentsRequest(
     string? Name,
     Guid? CategoryId,
+    Guid? ClientId,
     int? Month,
     int? Year,
     Guid? DocumentTypeId,

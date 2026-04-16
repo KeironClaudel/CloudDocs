@@ -101,7 +101,7 @@ public class DocumentsController : ControllerBase
                 form.ExpirationDate,
                 form.ExpirationDatePendingDefinition,
                 form.AccessLevelId,
-                Guid.Empty,
+                form.ClientId,
                 form.DepartmentIds);
 
             await using var stream = form.File.OpenReadStream();
@@ -138,6 +138,7 @@ public class DocumentsController : ControllerBase
     public async Task<IActionResult> Search(
     [FromQuery] string? name,
     [FromQuery] Guid? categoryId,
+    [FromQuery] Guid? clientId,
     [FromQuery] int? month,
     [FromQuery] int? year,
     [FromQuery] Guid? documentTypeId,
@@ -165,6 +166,7 @@ public class DocumentsController : ControllerBase
         var request = new SearchDocumentsRequest(
             name,
             categoryId,
+            clientId,
             month,
             year,
             documentTypeId,

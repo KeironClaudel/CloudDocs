@@ -32,6 +32,10 @@ public class UploadDocumentRequestValidator : AbstractValidator<UploadDocumentRe
             .NotEmpty()
                 .WithMessage("Access level is required.");
 
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+                .WithMessage("Client is required.");
+
         RuleFor(x => x.ExpirationDate)
             .Must(date => !date.HasValue || date.Value > DateTime.UtcNow.Date)
             .WithMessage("Expiration date must be greater than today.")
