@@ -123,4 +123,16 @@ public class DocumentRepository : IDocumentRepository
             TotalCount = totalCount
         };
     }
+
+    /// <summary>
+    /// Counts documents by user.
+    /// </summary>
+    /// <param name="uploadedByUserId">The identifier of the user who uploaded the documents.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the count of documents uploaded by the specified user.</returns>
+    public async Task<int> CountByUserAsync(Guid uploadedByUserId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Documents
+            .CountAsync(x => x.UploadedByUserId == uploadedByUserId && x.IsActive, cancellationToken);
+    }
 }

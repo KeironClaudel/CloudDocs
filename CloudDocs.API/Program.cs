@@ -228,6 +228,12 @@ builder.Services.Configure<FileStorageSettings>(
 
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
+// Demo policy service
+builder.Services.Configure<DemoSettings>(
+    builder.Configuration.GetSection(DemoSettings.SectionName));
+
+builder.Services.AddScoped<IDemoPolicyService, DemoPolicyService>();
+
 // LOCAL
 // builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 

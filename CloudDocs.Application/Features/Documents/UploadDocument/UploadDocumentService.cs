@@ -26,6 +26,7 @@ public class UploadDocumentService : IUploadDocumentService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IAuditService _auditService;
+    private readonly IDemoPolicyService _demoPolicyService;
     private readonly ILogger<UploadDocumentService> _logger;
 
     /// <summary>
@@ -42,6 +43,7 @@ public class UploadDocumentService : IUploadDocumentService
     /// <param name="accessLevelRepository">The document access level repository.</param>
     /// <param name="departmentRepository">The document department repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
+    /// <param name="demoPolicyService">The demo policy service.</param>
     /// <param name="logger">The logger.</param>
     public UploadDocumentService(
         ICategoryRepository categoryRepository,
@@ -55,6 +57,7 @@ public class UploadDocumentService : IUploadDocumentService
         IAccessLevelRepository accessLevelRepository,
         IDepartmentRepository departmentRepository,
         IUnitOfWork unitOfWork,
+        IDemoPolicyService demoPolicyService,
         ILogger<UploadDocumentService> logger)
     {
         _categoryRepository = categoryRepository;
@@ -68,6 +71,7 @@ public class UploadDocumentService : IUploadDocumentService
         _accessLevelRepository = accessLevelRepository;
         _departmentRepository = departmentRepository;
         _unitOfWork = unitOfWork;
+        _demoPolicyService = demoPolicyService;
         _logger = logger;
     }
 
@@ -148,6 +152,15 @@ public class UploadDocumentService : IUploadDocumentService
         var uniqueFileName = $"{Guid.NewGuid()}.pdf";
 
         var storedPath = await _fileStorageService.SaveFileAsync(fileStream, uniqueFileName, cancellationToken);
+
+        var currentDocumentCount = await _documentRepository.CountByUserAsync(user.Id, cancellationToken);
+
+        await _demoPolicyService.ValidateUploadAsync(
+            user,
+            request.ContentType,
+            request.FileSize,
+            currentDocumentCount,
+            cancellationToken);
 
         var document = new Document
         {
