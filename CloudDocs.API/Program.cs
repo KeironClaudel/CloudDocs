@@ -1,8 +1,5 @@
 // System imports
 using CloudDocs.API.Common;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
-using Microsoft.EntityFrameworkCore;
-
 // Global Error Handling Middleware
 using CloudDocs.API.Extensions;
 using CloudDocs.Application.Common.Interfaces.Persistence;
@@ -35,6 +32,14 @@ using CloudDocs.Application.Features.Categories.GetCategories;
 using CloudDocs.Application.Features.Categories.GetCategoryById;
 using CloudDocs.Application.Features.Categories.ReactivateCategory;
 using CloudDocs.Application.Features.Categories.UpdateCategory;
+// Client features
+using CloudDocs.Application.Features.Clients.CreateClient;
+using CloudDocs.Application.Features.Clients.DeactivateClient;
+using CloudDocs.Application.Features.Clients.GetClientById;
+using CloudDocs.Application.Features.Clients.GetClients;
+using CloudDocs.Application.Features.Clients.ReactivateClient;
+using CloudDocs.Application.Features.Clients.SearchClients;
+using CloudDocs.Application.Features.Clients.UpdateClient;
 // Deparments Features
 using CloudDocs.Application.Features.Departments.CreateDepartment;
 using CloudDocs.Application.Features.Departments.DeactivateDepartment;
@@ -49,6 +54,7 @@ using CloudDocs.Application.Features.Documents.GetDocumentFile;
 using CloudDocs.Application.Features.Documents.ReactivateDocument;
 using CloudDocs.Application.Features.Documents.RenameDocument;
 using CloudDocs.Application.Features.Documents.SearchDocuments;
+using CloudDocs.Application.Features.Documents.SendDocumentToClient;
 using CloudDocs.Application.Features.Documents.UpdateDocumentVisibility;
 using CloudDocs.Application.Features.Documents.UploadDocument;
 using CloudDocs.Application.Features.Documents.Versions.GetDocumentVersions;
@@ -59,6 +65,8 @@ using CloudDocs.Application.Features.DocumentTypes.GetDocumentTypeById;
 using CloudDocs.Application.Features.DocumentTypes.GetDocumentTypes;
 using CloudDocs.Application.Features.DocumentTypes.ReactivateDocumentType;
 using CloudDocs.Application.Features.DocumentTypes.UpdateDocumentType;
+//Email features
+using CloudDocs.Application.Features.Email;
 // Users Features
 using CloudDocs.Application.Features.Users.CreateUser;
 using CloudDocs.Application.Features.Users.DeactivateUser;
@@ -73,20 +81,12 @@ using CloudDocs.Infrastructure.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using System.Text;
-// Client features
-using CloudDocs.Application.Features.Clients.CreateClient;
-using CloudDocs.Application.Features.Clients.DeactivateClient;
-using CloudDocs.Application.Features.Clients.GetClientById;
-using CloudDocs.Application.Features.Clients.GetClients;
-using CloudDocs.Application.Features.Clients.ReactivateClient;
-using CloudDocs.Application.Features.Clients.SearchClients;
-using CloudDocs.Application.Features.Clients.UpdateClient;
-//Email features
-using CloudDocs.Application.Features.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -311,6 +311,8 @@ builder.Services.Configure<SmtpSettings>(
     builder.Configuration.GetSection(SmtpSettings.SectionName));
 
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+
+builder.Services.AddScoped<ISendDocumentToClientService, SendDocumentToClientService>();
 
 // Azure Blob Settings
 builder.Services.Configure<AzureBlobSettings>(

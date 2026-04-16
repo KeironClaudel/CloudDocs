@@ -1,0 +1,75 @@
+﻿using CloudDocs.Application.Common.Exceptions;
+using CloudDocs.Application.Common.Interfaces.Persistence;
+using CloudDocs.Application.Common.Interfaces.Services;
+
+namespace CloudDocs.Application.Features.Documents.SendDocumentToClient;
+
+public class SendDocumentToClientService : ISendDocumentToClientService
+{
+    private readonly IDocumentRepository _documentRepository;
+    private readonly IFileStorageService _fileStorageService;
+    private readonly IEmailService _emailService;
+    private readonly IAuditService _auditService;
+
+    public SendDocumentToClientService(
+        IDocumentRepository documentRepository,
+        IFileStorageService fileStorageService,
+        IEmailService emailService,
+        IAuditService auditService)
+    {
+        _documentRepository = documentRepository;
+        _fileStorageService = fileStorageService;
+        _emailService = emailService;
+        _auditService = auditService;
+    }
+
+    public async Task ExecuteAsync(
+        Guid documentId,
+        Guid currentUserId,
+        SendDocumentToClientRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var document = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
+
+        if (document is null)
+            throw new NotFoundException("Document not found.");
+
+        if (document.Client is null || !document.Client.IsActive)
+            throw new BadRequestException("The document does not have an active client.");
+
+        if (string.IsNullOrWhiteSpace(document.Client.Email))
+            throw new BadRequestException("Client does not have an email configured.");
+
+        var fileStream = await _fileStorageService.GetFileAsync(document.StoragePath, cancellationToken);
+
+        if (fileStream is null)
+            throw new NotFoundException("Document file not found in storage.");
+
+        var subject = string.IsNullOrWhiteSpace(request.Subject)
+            ? $"Document: {document.OriginalFileName}{document.FileExtension}"
+            : request.Subject.Trim();
+
+        var body = string.IsNullOrWhiteSpace(request.Message)
+            ? $"Dear client,\n\nPlease find attached the document '{document.OriginalFileName}{document.FileExtension}'."
+            : request.Message.Trim();
+
+        await _emailService.SendAsync(
+            document.Client.Email,
+            subject,
+            body,
+            $"{document.OriginalFileName}{document.FileExtension}",
+            fileStream,
+            document.ContentType,
+            cancellationToken);
+
+        await _auditService.LogAsync(
+            currentUserId,
+            "SendToClient",
+            "Documents",
+            "Document",
+            document.Id.ToString(),
+            $"Document sent to client: {document.Client.Email}",
+            null,
+            cancellationToken);
+    }
+}
