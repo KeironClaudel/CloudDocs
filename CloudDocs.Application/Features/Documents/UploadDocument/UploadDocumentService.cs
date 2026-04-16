@@ -1,4 +1,5 @@
 using CloudDocs.Application.Common.Exceptions;
+using CloudDocs.Application.Common.Helpers;
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Services;
 using CloudDocs.Application.Common.Models;
@@ -27,6 +28,7 @@ public class UploadDocumentService : IUploadDocumentService
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IAuditService _auditService;
     private readonly IDemoPolicyService _demoPolicyService;
+    private readonly IClientRepository _clientRepository;
     private readonly ILogger<UploadDocumentService> _logger;
 
     /// <summary>
@@ -44,6 +46,7 @@ public class UploadDocumentService : IUploadDocumentService
     /// <param name="departmentRepository">The document department repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
     /// <param name="demoPolicyService">The demo policy service.</param>
+    /// <param name="clientRepository">The client repository.</param>
     /// <param name="logger">The logger.</param>
     public UploadDocumentService(
         ICategoryRepository categoryRepository,
@@ -57,6 +60,7 @@ public class UploadDocumentService : IUploadDocumentService
         IAccessLevelRepository accessLevelRepository,
         IDepartmentRepository departmentRepository,
         IUnitOfWork unitOfWork,
+        IClientRepository clientRepository,
         IDemoPolicyService demoPolicyService,
         ILogger<UploadDocumentService> logger)
     {
@@ -71,6 +75,7 @@ public class UploadDocumentService : IUploadDocumentService
         _accessLevelRepository = accessLevelRepository;
         _departmentRepository = departmentRepository;
         _unitOfWork = unitOfWork;
+        _clientRepository = clientRepository;
         _demoPolicyService = demoPolicyService;
         _logger = logger;
     }
@@ -131,6 +136,11 @@ public class UploadDocumentService : IUploadDocumentService
         if (accessLevel is null || !accessLevel.IsActive)
             throw new NotFoundException("Access level not found or inactive.");
 
+        var client = await _clientRepository.GetByIdAsync(request.ClientId, cancellationToken);
+
+        if (client is null || !client.IsActive)
+            throw new BadRequestException("Client not found or inactive.");
+
         var selectedDepartments = new List<Department>();
 
         if (string.Equals(accessLevel.Code, "DEPARTMENT_ONLY", StringComparison.OrdinalIgnoreCase))
@@ -151,7 +161,10 @@ public class UploadDocumentService : IUploadDocumentService
 
         var uniqueFileName = $"{Guid.NewGuid()}.pdf";
 
-        var storedPath = await _fileStorageService.SaveFileAsync(fileStream, uniqueFileName, cancellationToken);
+        var storagePath = StoragePathBuilder.BuildClientCategoryPath(
+            client.Name,
+            category.Name,
+            uniqueFileName);
 
         var currentDocumentCount = await _documentRepository.CountByUserAsync(user.Id, cancellationToken);
 
@@ -161,6 +174,8 @@ public class UploadDocumentService : IUploadDocumentService
             request.FileSize,
             currentDocumentCount,
             cancellationToken);
+
+        var storedPath = await _fileStorageService.SaveFileAsync(fileStream, storagePath, cancellationToken);
 
         var document = new Document
         {
@@ -181,6 +196,8 @@ public class UploadDocumentService : IUploadDocumentService
             ExpirationDatePendingDefinition = request.ExpirationDatePendingDefinition,
             AccessLevelId = accessLevel.Id,
             AccessLevel = accessLevel,
+            ClientId = client.Id,
+            Client = client,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -254,6 +271,8 @@ public class UploadDocumentService : IUploadDocumentService
             accessLevel.Id,
             accessLevel.Name,
             accessLevel.Code,
+            client.Id,
+            client.Name,
             visibleDepartments,
             document.IsActive,
             document.CreatedAt);

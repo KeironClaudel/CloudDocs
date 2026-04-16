@@ -46,6 +46,11 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
             .HasForeignKey(x => x.AccessLevelId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(x => x.Client)
+            .WithMany(x => x.Documents)
+            .HasForeignKey(x => x.ClientId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(x => x.OriginalFileName);
         builder.HasIndex(x => x.CategoryId);
         builder.HasIndex(x => x.Month);

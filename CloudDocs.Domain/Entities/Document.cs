@@ -89,4 +89,14 @@ public class Document : SoftDeletableEntity
     /// Gets or sets the versions.
     /// </summary>
     public ICollection<DocumentVersion> Versions { get; set; } = new List<DocumentVersion>();
+
+    /// <summary>
+    /// Gets or sets the client id.
+    /// </summary>
+    public Guid ClientId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the client. 
+    /// </summary>
+    public Client Client { get; set; } = null!;
 }

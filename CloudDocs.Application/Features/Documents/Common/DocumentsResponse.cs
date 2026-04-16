@@ -30,8 +30,12 @@ public sealed record DocumentDepartmentResponse(
 /// <param name="DocumentTypeName">The document type name.</param>
 /// <param name="ExpirationDate">The expiration date.</param>
 /// <param name="ExpirationDatePendingDefinition">The expiration date pending definition.</param>
-/// <param name="AccessLevel">The access level.</param>
-/// <param name="Department">The department.</param>
+/// <param name="AccessLevelId">The access level id.</param>
+/// <param name="AccessLevelName">The access level name.</param>
+/// <param name="AccessLevelCode">The access level code.</param>
+/// <param name="ClientId">The client id.</param>
+/// <param name="ClientName">The client name.</param>
+/// <param name="VisibleDepartments">The visible departments.</param>
 /// <param name="IsActive">The is active.</param>
 /// <param name="CreatedAt">The created at.</param>
 public sealed record DocumentResponse(
@@ -54,6 +58,8 @@ public sealed record DocumentResponse(
     Guid AccessLevelId,
     string AccessLevelName,
     string AccessLevelCode,
+    Guid ClientId,
+    string ClientName,
     List<DocumentDepartmentResponse> VisibleDepartments,
     bool IsActive,
     DateTime CreatedAt);

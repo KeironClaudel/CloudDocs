@@ -9,10 +9,11 @@ namespace CloudDocs.Application.Features.Documents.UploadDocument;
 /// <param name="ContentType">The content type.</param>
 /// <param name="FileSize">The file size.</param>
 /// <param name="CategoryId">The category id identifier.</param>
-/// <param name="DocumentType">The document type.</param>
+/// <param name="DocumentTypeId">The document type identifier.</param>
 /// <param name="ExpirationDate">The expiration date.</param>
 /// <param name="ExpirationDatePendingDefinition">The expiration date pending definition.</param>
-/// <param name="AccessLevel">The access level.</param>
+/// <param name="AccessLevelId">The access level identifier.</param>
+/// <param name="ClientId">The client id.</param>
 /// <param name="DepartmentIds">The department ids.</param>
 public sealed record UploadDocumentRequest(
     string OriginalFileName,
@@ -23,4 +24,5 @@ public sealed record UploadDocumentRequest(
     DateTime? ExpirationDate,
     bool ExpirationDatePendingDefinition,
     Guid AccessLevelId,
+    Guid ClientId,
     List<Guid>? DepartmentIds);
