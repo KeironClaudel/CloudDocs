@@ -69,6 +69,10 @@ public class AppDbContext : DbContext
     /// </summary>
     public DbSet<DocumentDepartment> DocumentDepartments => Set<DocumentDepartment>();
 
+    /// <summary>
+    /// Gets the set of clients in the context for querying and saving.
+    /// </summary>
+    public DbSet<Client> Clients => Set<Client>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

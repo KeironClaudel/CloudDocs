@@ -78,6 +78,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
+// Client features
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -208,48 +211,8 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 
-// Azure Blob Settings
-builder.Services.Configure<AzureBlobSettings>(
-    builder.Configuration.GetSection(AzureBlobSettings.SectionName));
-
-
-// Category services
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IGetCategoriesService, GetCategoriesService>();
-builder.Services.AddScoped<IGetCategoryByIdService, GetCategoryByIdService>();
-builder.Services.AddScoped<ICreateCategoryService, CreateCategoryService>();
-builder.Services.AddScoped<IUpdateCategoryService, UpdateCategoryService>();
-builder.Services.AddScoped<IDeactivateCategoryService, DeactivateCategoryService>();
-builder.Services.AddScoped<IReactivateCategoryService, ReactivateCategoryService>();
-
 // Document services
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
-
-// Demo policy service
-builder.Services.Configure<DemoSettings>(
-    builder.Configuration.GetSection(DemoSettings.SectionName));
-
-builder.Services.AddScoped<IDemoPolicyService, DemoPolicyService>();
-
-// File storage service configuration based on appsettings
-builder.Services.Configure<FileStorageSettings>(
-    builder.Configuration.GetSection(FileStorageSettings.SectionName));
-
-builder.Services.Configure<AzureBlobSettings>(
-    builder.Configuration.GetSection(AzureBlobSettings.SectionName));
-
-var storageProvider = builder.Configuration["Storage:Provider"];
-
-if (string.Equals(storageProvider, "AzureBlob", StringComparison.OrdinalIgnoreCase))
-{
-    builder.Services.AddScoped<IFileStorageService, AzureBlobFileStorageService>();
-}
-else
-{
-    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
-}
-
-
 builder.Services.AddScoped<IUploadDocumentService, UploadDocumentService>();
 builder.Services.AddScoped<ISearchDocumentsService, SearchDocumentsService>();
 builder.Services.AddScoped<IGetDocumentByIdService, GetDocumentByIdService>();
@@ -279,6 +242,16 @@ builder.Services.AddScoped<IDeactivateAccessLevelService, DeactivateAccessLevelS
 builder.Services.AddScoped<IReactivateAccessLevelService, ReactivateAccessLevelService>();
 builder.Services.AddScoped<IUpdateDocumentVisibilityService, UpdateDocumentVisibilityService>();
 
+// Category services
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IGetCategoriesService, GetCategoriesService>();
+builder.Services.AddScoped<IGetCategoryByIdService, GetCategoryByIdService>();
+builder.Services.AddScoped<ICreateCategoryService, CreateCategoryService>();
+builder.Services.AddScoped<IUpdateCategoryService, UpdateCategoryService>();
+builder.Services.AddScoped<IDeactivateCategoryService, DeactivateCategoryService>();
+builder.Services.AddScoped<IReactivateCategoryService, ReactivateCategoryService>();
+
+// Department services
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
 // Document Access services
@@ -312,14 +285,42 @@ builder.Services.AddScoped<IUpdateDepartmentService, UpdateDepartmentService>();
 builder.Services.AddScoped<IDeactivateDepartmentService, DeactivateDepartmentService>();
 builder.Services.AddScoped<IReactivateDepartmentService, ReactivateDepartmentService>();
 
-// Health check services
-builder.Services.AddHealthChecks();
-
 // Email service
 builder.Services.Configure<FrontendSettings>(
     builder.Configuration.GetSection(FrontendSettings.SectionName));
 
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Azure Blob Settings
+builder.Services.Configure<AzureBlobSettings>(
+    builder.Configuration.GetSection(AzureBlobSettings.SectionName));
+
+// Demo policy service
+builder.Services.Configure<DemoSettings>(
+    builder.Configuration.GetSection(DemoSettings.SectionName));
+
+builder.Services.AddScoped<IDemoPolicyService, DemoPolicyService>();
+
+// File storage service configuration based on appsettings
+builder.Services.Configure<FileStorageSettings>(
+    builder.Configuration.GetSection(FileStorageSettings.SectionName));
+
+builder.Services.Configure<AzureBlobSettings>(
+    builder.Configuration.GetSection(AzureBlobSettings.SectionName));
+
+var storageProvider = builder.Configuration["Storage:Provider"];
+
+if (string.Equals(storageProvider, "AzureBlob", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddScoped<IFileStorageService, AzureBlobFileStorageService>();
+}
+else
+{
+    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+}
+
+// Health check services
+builder.Services.AddHealthChecks();
 
 // CORS
 builder.Services.AddCors(options =>

@@ -26,6 +26,7 @@ public class UploadDocumentServiceTests
     private readonly Mock<IAccessLevelRepository> _accessLevelRepositoryMock = new();
     private readonly Mock<IDepartmentRepository> _departmentRepositoryMock = new();
     private readonly Mock<IAuditService> _auditServiceMock = new();
+    private readonly Mock<IDemoPolicyService> _demoPolicyServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
     private readonly FileStorageSettings _fileStorageSettings = new()
@@ -50,6 +51,7 @@ public class UploadDocumentServiceTests
         _accessLevelRepositoryMock.Object,
         _departmentRepositoryMock.Object,
         _unitOfWorkMock.Object,
+        _demoPolicyServiceMock.Object,
         NullLogger<UploadDocumentService>.Instance);
     }
 
