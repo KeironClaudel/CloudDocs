@@ -77,7 +77,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-
 // Client features
 using CloudDocs.Application.Features.Clients.CreateClient;
 using CloudDocs.Application.Features.Clients.DeactivateClient;
@@ -86,6 +85,8 @@ using CloudDocs.Application.Features.Clients.GetClients;
 using CloudDocs.Application.Features.Clients.ReactivateClient;
 using CloudDocs.Application.Features.Clients.SearchClients;
 using CloudDocs.Application.Features.Clients.UpdateClient;
+//Email features
+using CloudDocs.Application.Features.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -302,11 +303,14 @@ builder.Services.AddScoped<IUpdateClientService, UpdateClientService>();
 builder.Services.AddScoped<IDeactivateClientService, DeactivateClientService>();
 builder.Services.AddScoped<IReactivateClientService, ReactivateClientService>();
 
-// Email service
 builder.Services.Configure<FrontendSettings>(
     builder.Configuration.GetSection(FrontendSettings.SectionName));
 
-builder.Services.AddScoped<IEmailService, EmailService>();
+// Email Service
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection(SmtpSettings.SectionName));
+
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 // Azure Blob Settings
 builder.Services.Configure<AzureBlobSettings>(
@@ -348,6 +352,8 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "http://localhost:5173",
                 "https://localhost:5173",
+                "http://localhost:5174",
+                "https://localhost:5174",
                 "https://clouddocs-frontend.vercel.app"
             )
             .AllowAnyHeader()

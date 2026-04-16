@@ -96,7 +96,7 @@ public class ForgotPasswordService : IForgotPasswordService
             If you did not request this change, you can safely ignore this email.
             """;
 
-        await _emailService.SendAsync(user.Email, subject, body, cancellationToken);
+        await _emailService.SendAsync(user.Email, subject, body, null, null, null, cancellationToken);
 
         await _auditService.LogAsync(
             user.Id,

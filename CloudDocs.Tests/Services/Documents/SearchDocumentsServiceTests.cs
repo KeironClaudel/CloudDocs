@@ -42,6 +42,7 @@ public class SearchDocumentsServiceTests
         var request = new SearchDocumentsRequest(
             Name: "test",
             CategoryId: null,
+            ClientId: null,
             Month: null,
             Year: null,
             DocumentTypeId: null,
@@ -84,6 +85,7 @@ public class SearchDocumentsServiceTests
         var request = new SearchDocumentsRequest(
             Name: "test",
             CategoryId: null,
+            ClientId: null,
             Month: null,
             Year: null,
             DocumentTypeId: null,
@@ -180,6 +182,7 @@ public class SearchDocumentsServiceTests
         var request = new SearchDocumentsRequest(
             Name: "test",
             CategoryId: null,
+            ClientId: null,
             Month: null,
             Year: null,
             DocumentTypeId: null,

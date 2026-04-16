@@ -78,6 +78,9 @@ public class ForgotPasswordServiceTests
                 request.Email,
                 "CloudDocs Password Reset",
                 It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<Stream?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
         _auditServiceMock.Verify(
@@ -116,7 +119,7 @@ public class ForgotPasswordServiceTests
             x => x.AddAsync(It.IsAny<PasswordResetToken>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _emailServiceMock.Verify(
-            x => x.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            x => x.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<Stream?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _auditServiceMock.Verify(
             x => x.LogAsync(
@@ -162,7 +165,7 @@ public class ForgotPasswordServiceTests
             x => x.AddAsync(It.IsAny<PasswordResetToken>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _emailServiceMock.Verify(
-            x => x.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            x => x.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<Stream?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 }

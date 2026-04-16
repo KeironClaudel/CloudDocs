@@ -1,17 +1,26 @@
 ﻿namespace CloudDocs.Application.Common.Interfaces.Services;
 
 /// <summary>
-/// Represents a service for sending emails.
+/// Provides operations for sending emails.
 /// </summary>
-
 public interface IEmailService
 {
-    /// <summary>Asynchronously sends an email message to the specified recipient with the given subject and body.
+    /// <summary>
+    /// Sends an email message.
     /// </summary>
-    /// <param name="to">The email address of the recipient. Cannot be null or empty.</param>
-    /// <param name="subject">The subject line of the email message. Cannot be null.</param>
-    /// <param name="body">The body content of the email message. Cannot be null.</param>
-    /// <param name="cancellationToken">A cancellation token that can be used to cancel the send operation.</param>
-    /// <returns>A task that represents the asynchronous send operation.</returns>
-    Task SendAsync(string to, string subject, string body, CancellationToken cancellationToken = default);
+    /// <param name="to">The recipient email address.</param>
+    /// <param name="subject">The subject.</param>
+    /// <param name="body">The message body.</param>
+    /// <param name="attachmentFileName">The optional attachment file name.</param>
+    /// <param name="attachmentStream">The optional attachment stream.</param>
+    /// <param name="attachmentContentType">The optional attachment content type.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    Task SendAsync(
+        string to,
+        string subject,
+        string body,
+        string? attachmentFileName = null,
+        Stream? attachmentStream = null,
+        string? attachmentContentType = null,
+        CancellationToken cancellationToken = default);
 }
