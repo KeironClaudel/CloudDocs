@@ -16,6 +16,7 @@ public class CreateUserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly Mock<IRoleRepository> _roleRepositoryMock = new();
+    private readonly Mock<IDepartmentRepository> _departmentRepositoryMock = new();
     private readonly Mock<IPasswordHasher> _passwordHasherMock = new();
     private readonly Mock<IAuditService> _auditServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
@@ -48,9 +49,14 @@ public class CreateUserServiceTests
             .Setup(x => x.Hash(request.Password))
             .Returns("hashed-password");
 
+        _departmentRepositoryMock
+            .Setup(x => x.GetByNameAsync("Finance", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Department?)null);
+
         var service = new CreateUserService(
             _userRepositoryMock.Object,
             _roleRepositoryMock.Object,
+            _departmentRepositoryMock.Object,
             _passwordHasherMock.Object,
             _auditServiceMock.Object,
             _unitOfWorkMock.Object);
@@ -87,6 +93,7 @@ public class CreateUserServiceTests
         var service = new CreateUserService(
             _userRepositoryMock.Object,
             _roleRepositoryMock.Object,
+            _departmentRepositoryMock.Object,
             _passwordHasherMock.Object,
             _auditServiceMock.Object,
             _unitOfWorkMock.Object);

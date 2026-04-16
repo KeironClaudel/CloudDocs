@@ -14,6 +14,7 @@ public class CreateUserService : ICreateUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
+    private readonly IDepartmentRepository _departmentRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
@@ -28,12 +29,14 @@ public class CreateUserService : ICreateUserService
     public CreateUserService(
         IUserRepository userRepository,
         IRoleRepository roleRepository,
+        IDepartmentRepository departmentRepository,
         IPasswordHasher passwordHasher,
         IAuditService auditService,
         IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
+        _departmentRepository = departmentRepository;
         _passwordHasher = passwordHasher;
         _auditService = auditService;
         _unitOfWork = unitOfWork;
@@ -61,13 +64,27 @@ public class CreateUserService : ICreateUserService
             FullName = request.FullName.Trim(),
             Email = request.Email.Trim().ToLower(),
             PasswordHash = _passwordHasher.Hash(request.Password),
-            Department = string.IsNullOrWhiteSpace(request.Department)
-                ? null
-                : new Department { Name = request.Department.Trim() },
+            Department = null,
             RoleId = role.Id,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
+
+        if (!string.IsNullOrWhiteSpace(request.Department))
+        {
+            var deptName = request.Department.Trim();
+            var existing = await _departmentRepository.GetByNameAsync(deptName, cancellationToken);
+            if (existing is not null)
+            {
+                user.Department = existing;
+            }
+            else
+            {
+                var newDept = new Department { Name = deptName };
+                await _departmentRepository.AddAsync(newDept, cancellationToken);
+                user.Department = newDept;
+            }
+        }
 
         await _userRepository.AddAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

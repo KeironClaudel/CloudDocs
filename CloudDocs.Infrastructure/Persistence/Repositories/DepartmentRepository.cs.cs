@@ -44,6 +44,14 @@ public class DepartmentRepository : IDepartmentRepository
             .AnyAsync(x => x.Name.ToLower() == normalizedName, cancellationToken);
     }
 
+    public async Task<Department?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        var normalizedName = name.Trim().ToLower();
+
+        return await _context.Departments
+            .FirstOrDefaultAsync(x => x.Name.ToLower() == normalizedName && x.IsActive, cancellationToken);
+    }
+
     public async Task AddAsync(Department department, CancellationToken cancellationToken = default)
     {
         await _context.Departments.AddAsync(department, cancellationToken);
