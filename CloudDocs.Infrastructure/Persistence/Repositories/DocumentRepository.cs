@@ -37,6 +37,7 @@ public class DocumentRepository : IDocumentRepository
                         .Include(x => x.UploadedByUser)
                         .Include(x => x.DocumentDepartments)
                             .ThenInclude(dd => dd.Department)
+                        .Include(x => x.Client)
                         .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
@@ -78,6 +79,7 @@ public class DocumentRepository : IDocumentRepository
                     .Include(x => x.UploadedByUser)
                     .Include(x => x.DocumentDepartments)
                         .ThenInclude(dd => dd.Department)
+                    .Include(x => x.Client)
                     .AsNoTracking()
                     .AsQueryable();
 
