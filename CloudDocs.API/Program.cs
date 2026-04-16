@@ -297,7 +297,8 @@ builder.Services.AddScoped<IUpdateDepartmentService, UpdateDepartmentService>();
 builder.Services.AddScoped<IDeactivateDepartmentService, DeactivateDepartmentService>();
 builder.Services.AddScoped<IReactivateDepartmentService, ReactivateDepartmentService>();
 
-
+// Health check services
+builder.Services.AddHealthChecks();
 
 // Email service
 builder.Services.Configure<FrontendSettings>(
@@ -342,6 +343,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 // Seeder
 using (var scope = app.Services.CreateScope())
