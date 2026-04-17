@@ -15,9 +15,9 @@ public class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
             .EmailAddress().WithMessage("A valid email address is required.")
             .MaximumLength(150).WithMessage("Email cannot exceed 150 characters.");
 
-        RuleFor(x => x.Department)
-            .MaximumLength(100).WithMessage("Department cannot exceed 100 characters.")
-            .When(x => !string.IsNullOrWhiteSpace(x.Department));
+        RuleFor(x => x.DepartmentId)
+            .Must(id => id != Guid.Empty).WithMessage("Department is invalid.")
+            .When(x => x.DepartmentId.HasValue);
 
         RuleFor(x => x.RoleId)
             .NotEmpty().WithMessage("Role is required.");

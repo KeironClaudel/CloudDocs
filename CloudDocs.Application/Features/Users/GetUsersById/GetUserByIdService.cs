@@ -36,7 +36,9 @@ public class GetUserByIdService : IGetUserByIdService
             user.Id,
             user.FullName,
             user.Email,
+            user.DepartmentId,
             user.Department?.Name,
+            user.Role.Id,
             user.Role.Name,
             user.IsActive,
             user.CreatedAt);

@@ -18,11 +18,13 @@ public class CreateUserService : ICreateUserService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateUserService"/> class.
     /// </summary>
     /// <param name="userRepository">The user repository.</param>
     /// <param name="roleRepository">The role repository.</param>
+    /// <param name="departmentRepository">The department repository.</param>
     /// <param name="passwordHasher">The password hasher.</param>
     /// <param name="auditService">The audit service.</param>
     /// <param name="unitOfWork">The unit of work.</param>
@@ -58,51 +60,48 @@ public class CreateUserService : ICreateUserService
         if (role is null)
             throw new BadRequestException("Invalid role.");
 
+        Department? department = null;
+
+        if (request.DepartmentId.HasValue)
+        {
+            department = await _departmentRepository.GetByIdAsync(request.DepartmentId.Value, cancellationToken);
+
+            if (department is null || !department.IsActive)
+                throw new BadRequestException("Department not found or inactive.");
+        }
+
         var user = new User
         {
             Id = Guid.NewGuid(),
             FullName = request.FullName.Trim(),
             Email = request.Email.Trim().ToLower(),
             PasswordHash = _passwordHasher.Hash(request.Password),
-            Department = null,
+            DepartmentId = department?.Id,
             RoleId = role.Id,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
 
-        if (!string.IsNullOrWhiteSpace(request.Department))
-        {
-            var deptName = request.Department.Trim();
-            var existing = await _departmentRepository.GetByNameAsync(deptName, cancellationToken);
-            if (existing is not null)
-            {
-                user.Department = existing;
-            }
-            else
-            {
-                var newDept = new Department { Name = deptName };
-                await _departmentRepository.AddAsync(newDept, cancellationToken);
-                user.Department = newDept;
-            }
-        }
-
         await _userRepository.AddAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
         await _auditService.LogAsync(
-                                    null,
-                                    "Create",
-                                    "Users",
-                                    "User",
-                                    user.Id.ToString(),
-                                    $"User created with email: {user.Email} and role: {role.Name}",
-                                    null,
-                                    cancellationToken);
+            null,
+            "Create",
+            "Users",
+            "User",
+            user.Id.ToString(),
+            $"User created with email: {user.Email} and role: {role.Name}",
+            null,
+            cancellationToken);
 
         return new UserResponse(
             user.Id,
             user.FullName,
             user.Email,
-            user.Department?.Name,
+            user.DepartmentId,
+            department?.Name,
+            role.Id,
             role.Name,
             user.IsActive,
             user.CreatedAt);

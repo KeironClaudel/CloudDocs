@@ -29,12 +29,13 @@ public class CreateUserServiceTests
     public async Task CreateAsync_ShouldCreateUser_WhenRequestIsValid()
     {
         var roleId = Guid.NewGuid();
+        var deptId = Guid.NewGuid();
 
         var request = new CreateUserRequest(
             "Keiron Test",
             "keiron@test.com",
             "User1234!",
-            "Finance",
+            deptId,
             roleId);
 
         _userRepositoryMock
@@ -50,8 +51,8 @@ public class CreateUserServiceTests
             .Returns("hashed-password");
 
         _departmentRepositoryMock
-            .Setup(x => x.GetByNameAsync("Finance", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Department?)null);
+            .Setup(x => x.GetByIdAsync(deptId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Department { Id = deptId, Name = "Finance", IsActive = true });
 
         var service = new CreateUserService(
             _userRepositoryMock.Object,
@@ -83,7 +84,7 @@ public class CreateUserServiceTests
             "Keiron Test",
             "keiron@test.com",
             "User1234!",
-            "Finance",
+            Guid.NewGuid(),
             Guid.NewGuid());
 
         _userRepositoryMock

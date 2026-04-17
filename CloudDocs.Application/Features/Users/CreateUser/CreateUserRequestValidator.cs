@@ -26,10 +26,10 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
                 .WithMessage("Password is required.")
             .ApplyPasswordRules();
 
-        RuleFor(x => x.Department)
-            .MaximumLength(100)
-                .WithMessage("Department cannot exceed 100 characters.")
-            .When(x => !string.IsNullOrWhiteSpace(x.Department));
+        RuleFor(x => x.DepartmentId)
+            .Must(id => id != Guid.Empty)
+                .WithMessage("Department is invalid.")
+            .When(x => x.DepartmentId.HasValue);
 
         RuleFor(x => x.RoleId)
             .NotEmpty()

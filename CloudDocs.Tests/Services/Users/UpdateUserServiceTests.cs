@@ -16,6 +16,7 @@ public class UpdateUserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly Mock<IRoleRepository> _roleRepositoryMock = new();
+    private readonly Mock<IDepartmentRepository> _departmentRepositoryMock = new();
     private readonly Mock<IAuditService> _auditServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
@@ -24,6 +25,7 @@ public class UpdateUserServiceTests
         return new UpdateUserService(
             _userRepositoryMock.Object,
             _roleRepositoryMock.Object,
+            _departmentRepositoryMock.Object,
             _auditServiceMock.Object,
             _unitOfWorkMock.Object);
     }
@@ -37,7 +39,8 @@ public class UpdateUserServiceTests
     {
         var userId = Guid.NewGuid();
         var roleId = Guid.NewGuid();
-        var request = new UpdateUserRequest("New Name", "new@test.com", "Sales", roleId);
+        var deptId = Guid.NewGuid();
+        var request = new UpdateUserRequest("New Name", "new@test.com", deptId, roleId);
 
         _userRepositoryMock
             .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -59,7 +62,7 @@ public class UpdateUserServiceTests
         var userId = Guid.NewGuid();
         var newEmail = "another@test.com";
         var roleId = Guid.NewGuid();
-        var request = new UpdateUserRequest("New Name", newEmail, "Sales", roleId);
+        var request = new UpdateUserRequest("New Name", newEmail, Guid.NewGuid(), roleId);
 
         var userToUpdate = new User
         {
@@ -102,7 +105,7 @@ public class UpdateUserServiceTests
     {
         var userId = Guid.NewGuid();
         var roleId = Guid.NewGuid();
-        var request = new UpdateUserRequest("New Name", "new@test.com", "Sales", roleId);
+        var request = new UpdateUserRequest("New Name", "new@test.com", Guid.NewGuid(), roleId);
 
         var user = new User
         {
@@ -144,7 +147,8 @@ public class UpdateUserServiceTests
         var newEmail = "new@test.com";
         var newName = "New Name";
         var newDepartment = "Sales";
-        var request = new UpdateUserRequest(newName, newEmail, newDepartment, roleId);
+        var newDepartmentId = Guid.NewGuid();
+        var request = new UpdateUserRequest(newName, newEmail, newDepartmentId, roleId);
 
         var user = new User
         {
@@ -172,6 +176,10 @@ public class UpdateUserServiceTests
         _roleRepositoryMock
             .Setup(x => x.GetByIdAsync(roleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(role);
+
+        _departmentRepositoryMock
+            .Setup(x => x.GetByIdAsync(newDepartmentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Department { Id = newDepartmentId, Name = newDepartment, IsActive = true });
 
         var service = CreateService();
         var result = await service.UpdateAsync(userId, request);

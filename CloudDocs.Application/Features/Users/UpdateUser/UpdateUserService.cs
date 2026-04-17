@@ -13,23 +13,28 @@ public class UpdateUserService : IUpdateUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
+    private readonly IDepartmentRepository _departmentRepository;
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateUserService"/> class.
     /// </summary>
     /// <param name="userRepository">The user repository.</param>
     /// <param name="roleRepository">The role repository.</param>
+    /// <param name="departmentRepository">The department repository.</param>
     /// <param name="auditService">The audit service.</param>
     /// <param name="unitOfWork">The unit of work.</param>
     public UpdateUserService(
         IUserRepository userRepository,
         IRoleRepository roleRepository,
+        IDepartmentRepository departmentRepository,
         IAuditService auditService,
         IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
+        _departmentRepository = departmentRepository;
         _auditService = auditService;
         _unitOfWork = unitOfWork;
     }
@@ -55,11 +60,19 @@ public class UpdateUserService : IUpdateUserService
         if (role is null)
             throw new NotFoundException("Role not found.");
 
+        Department? department = null;
+
+        if (request.DepartmentId.HasValue)
+        {
+            department = await _departmentRepository.GetByIdAsync(request.DepartmentId.Value, cancellationToken);
+
+            if (department is null || !department.IsActive)
+                throw new BadRequestException("Department not found or inactive.");
+        }
+
         user.FullName = request.FullName.Trim();
         user.Email = request.Email.Trim().ToLower();
-        user.Department = string.IsNullOrWhiteSpace(request.Department)
-            ? null
-            : new Department { Name = request.Department.Trim() };
+        user.DepartmentId = department?.Id;
         user.RoleId = role.Id;
         user.UpdatedAt = DateTime.UtcNow;
 
@@ -67,20 +80,22 @@ public class UpdateUserService : IUpdateUserService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _auditService.LogAsync(
-                                        null,
-                                        "Update",
-                                        "Users",
-                                        "User",
-                                        user.Id.ToString(),
-                                        $"User updated. New email: {user.Email}, role: {role.Name}",
-                                        null,
-                                        cancellationToken);
+            null,
+            "Update",
+            "Users",
+            "User",
+            user.Id.ToString(),
+            $"User updated. New email: {user.Email}, role: {role.Name}",
+            null,
+            cancellationToken);
 
         return new UserResponse(
             user.Id,
             user.FullName,
             user.Email,
-            user.Department?.Name,
+            user.DepartmentId,
+            department?.Name,
+            role.Id,
             role.Name,
             user.IsActive,
             user.CreatedAt);

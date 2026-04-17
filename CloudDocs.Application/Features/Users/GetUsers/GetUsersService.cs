@@ -32,7 +32,9 @@ public class GetUsersService : IGetUsersService
             x.Id,
             x.FullName,
             x.Email,
+            x.DepartmentId,
             x.Department?.Name,
+            x.Role.Id,
             x.Role.Name,
             x.IsActive,
             x.CreatedAt)).ToList();

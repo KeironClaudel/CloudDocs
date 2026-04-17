@@ -12,5 +12,5 @@ public sealed record CreateUserRequest(
     string FullName,
     string Email,
     string Password,
-    string? Department,
+    Guid? DepartmentId,
     Guid RoleId);
