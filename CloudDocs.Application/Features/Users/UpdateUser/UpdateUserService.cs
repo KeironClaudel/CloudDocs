@@ -1,7 +1,8 @@
-using CloudDocs.Application.Common.Interfaces.Persistence;
-using CloudDocs.Application.Features.Users.Common;
-using CloudDocs.Application.Common.Interfaces.Services;
 using CloudDocs.Application.Common.Exceptions;
+using CloudDocs.Application.Common.Interfaces.Persistence;
+using CloudDocs.Application.Common.Interfaces.Security;
+using CloudDocs.Application.Common.Interfaces.Services;
+using CloudDocs.Application.Features.Users.Common;
 using CloudDocs.Domain.Entities;
 
 namespace CloudDocs.Application.Features.Users.UpdateUser;
@@ -14,6 +15,7 @@ public class UpdateUserService : IUpdateUserService
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly IDepartmentRepository _departmentRepository;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly IAuditService _auditService;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -23,18 +25,21 @@ public class UpdateUserService : IUpdateUserService
     /// <param name="userRepository">The user repository.</param>
     /// <param name="roleRepository">The role repository.</param>
     /// <param name="departmentRepository">The department repository.</param>
+    /// /// <param name="passwordHasher">The password hasher.</param>
     /// <param name="auditService">The audit service.</param>
     /// <param name="unitOfWork">The unit of work.</param>
     public UpdateUserService(
         IUserRepository userRepository,
         IRoleRepository roleRepository,
         IDepartmentRepository departmentRepository,
+        IPasswordHasher passwordHasher,
         IAuditService auditService,
         IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _departmentRepository = departmentRepository;
+        _passwordHasher = passwordHasher;
         _auditService = auditService;
         _unitOfWork = unitOfWork;
     }
@@ -76,8 +81,17 @@ public class UpdateUserService : IUpdateUserService
         user.RoleId = role.Id;
         user.UpdatedAt = DateTime.UtcNow;
 
+        if (!string.IsNullOrWhiteSpace(request.Password))
+        {
+            user.PasswordHash = _passwordHasher.Hash(request.Password);
+        }
+
         await _userRepository.UpdateAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var auditDetails = !string.IsNullOrWhiteSpace(request.Password)
+            ? $"User updated. New email: {user.Email}, role: {role.Name}, password was reset by admin."
+            : $"User updated. New email: {user.Email}, role: {role.Name}";
 
         await _auditService.LogAsync(
             null,
@@ -85,7 +99,7 @@ public class UpdateUserService : IUpdateUserService
             "Users",
             "User",
             user.Id.ToString(),
-            $"User updated. New email: {user.Email}, role: {role.Name}",
+            auditDetails,
             null,
             cancellationToken);
 

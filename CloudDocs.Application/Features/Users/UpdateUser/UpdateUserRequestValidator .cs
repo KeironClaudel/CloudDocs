@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using CloudDocs.Application.Common.Validators;
+using FluentValidation;
 
 namespace CloudDocs.Application.Features.Users.UpdateUser;
 
@@ -18,6 +19,10 @@ public class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
         RuleFor(x => x.DepartmentId)
             .Must(id => id != Guid.Empty).WithMessage("Department is invalid.")
             .When(x => x.DepartmentId.HasValue);
+
+        RuleFor(x => x.Password)
+            .ApplyPasswordRules()
+            .When(x => !string.IsNullOrWhiteSpace(x.Password));
 
         RuleFor(x => x.RoleId)
             .NotEmpty().WithMessage("Role is required.");
