@@ -1,7 +1,7 @@
 using CloudDocs.Application.Common.Exceptions;
 using CloudDocs.Application.Common.Interfaces.Persistence;
+using CloudDocs.Application.Common.Interfaces.Security;
 using CloudDocs.Application.Common.Interfaces.Services;
-using CloudDocs.Application.Features.Users.Common;
 using CloudDocs.Application.Features.Users.UpdateUser;
 using CloudDocs.Domain.Entities;
 using FluentAssertions;
@@ -17,6 +17,7 @@ public class UpdateUserServiceTests
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly Mock<IRoleRepository> _roleRepositoryMock = new();
     private readonly Mock<IDepartmentRepository> _departmentRepositoryMock = new();
+    private readonly Mock<IPasswordHasher> _passwordHasherMock = new();
     private readonly Mock<IAuditService> _auditServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
@@ -26,6 +27,7 @@ public class UpdateUserServiceTests
             _userRepositoryMock.Object,
             _roleRepositoryMock.Object,
             _departmentRepositoryMock.Object,
+            _passwordHasherMock.Object,
             _auditServiceMock.Object,
             _unitOfWorkMock.Object);
     }
@@ -40,7 +42,7 @@ public class UpdateUserServiceTests
         var userId = Guid.NewGuid();
         var roleId = Guid.NewGuid();
         var deptId = Guid.NewGuid();
-        var request = new UpdateUserRequest("New Name", "new@test.com", deptId, roleId);
+        var request = new UpdateUserRequest("New Name", "new@test.com", null, deptId, roleId);
 
         _userRepositoryMock
             .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -62,7 +64,7 @@ public class UpdateUserServiceTests
         var userId = Guid.NewGuid();
         var newEmail = "another@test.com";
         var roleId = Guid.NewGuid();
-        var request = new UpdateUserRequest("New Name", newEmail, Guid.NewGuid(), roleId);
+        var request = new UpdateUserRequest("New Name", newEmail, null, Guid.NewGuid(), roleId);
 
         var userToUpdate = new User
         {
@@ -105,7 +107,7 @@ public class UpdateUserServiceTests
     {
         var userId = Guid.NewGuid();
         var roleId = Guid.NewGuid();
-        var request = new UpdateUserRequest("New Name", "new@test.com", Guid.NewGuid(), roleId);
+        var request = new UpdateUserRequest("New Name", "new@test.com", null, Guid.NewGuid(), roleId);
 
         var user = new User
         {
@@ -148,7 +150,7 @@ public class UpdateUserServiceTests
         var newName = "New Name";
         var newDepartment = "Sales";
         var newDepartmentId = Guid.NewGuid();
-        var request = new UpdateUserRequest(newName, newEmail, newDepartmentId, roleId);
+        var request = new UpdateUserRequest(newName, newEmail, null, newDepartmentId, roleId);
 
         var user = new User
         {
@@ -220,7 +222,7 @@ public class UpdateUserServiceTests
         var userId = Guid.NewGuid();
         var roleId = Guid.NewGuid();
         var email = "current@test.com";
-        var request = new UpdateUserRequest("New Name", email, null, roleId);
+        var request = new UpdateUserRequest("New Name", email, null, null, roleId);
 
         var user = new User
         {

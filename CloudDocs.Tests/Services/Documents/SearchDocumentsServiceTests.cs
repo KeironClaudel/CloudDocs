@@ -105,6 +105,8 @@ public class SearchDocumentsServiceTests
             UploadedByUser = currentUser,
             Month = 1,
             Year = 2024,
+            ClientId = Guid.NewGuid(),
+            Client = new Client { Id = Guid.NewGuid(), Name = "Client A", IsActive = true },
             DocumentTypeId = Guid.NewGuid(),
             DocumentType = new DocumentTypeEntity { Name = "Invoice" },
             AccessLevelId = Guid.NewGuid(),
@@ -128,6 +130,8 @@ public class SearchDocumentsServiceTests
             UploadedByUser = new User { FullName = "Other User" },
             Month = 1,
             Year = 2024,
+            ClientId = Guid.NewGuid(),
+            Client = new Client { Id = Guid.NewGuid(), Name = "Client B", IsActive = true },
             DocumentTypeId = Guid.NewGuid(),
             DocumentType = new DocumentTypeEntity { Name = "Policy" },
             AccessLevelId = Guid.NewGuid(),
@@ -192,6 +196,7 @@ public class SearchDocumentsServiceTests
         var docType = new DocumentTypeEntity { Id = Guid.NewGuid(), Name = "Invoice" };
         var accessLevel = new AccessLevelEntity { Id = Guid.NewGuid(), Name = "Public", Code = "PUBLIC" };
         var dept = new Department { Id = Guid.NewGuid(), Name = "Finance Dept" };
+        var client = new Client { Id = Guid.NewGuid(), Name = "Contoso", IsActive = true };
 
         var document = new Document
         {
@@ -207,6 +212,8 @@ public class SearchDocumentsServiceTests
             UploadedByUser = currentUser,
             Month = 1,
             Year = 2024,
+            ClientId = client.Id,
+            Client = client,
             DocumentTypeId = docType.Id,
             DocumentType = docType,
             ExpirationDate = DateTime.UtcNow.AddYears(1),

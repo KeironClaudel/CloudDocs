@@ -254,28 +254,27 @@ public class UploadDocumentServiceTests
     }
 
     /// <summary>
-    /// Verifies that upload async should throw bad request when expiration is required but missing.
+    /// Verifies that upload async should throw bad request when client does not exist.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
-    public async Task UploadAsync_ShouldThrowBadRequest_WhenExpirationIsRequiredButMissing()
+    public async Task UploadAsync_ShouldThrowBadRequest_WhenClientDoesNotExist()
     {
         var categoryId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-
         var documentTypeId = Guid.NewGuid();
+        var clientId = Guid.NewGuid();
 
         var request = new UploadDocumentRequest(
             "contract.pdf",
             "application/pdf",
             100,
             categoryId,
-            // use the contract document type id from db
             documentTypeId,
             null,
             false,
             Guid.NewGuid(),
-            Guid.Empty,
+            clientId,
             null);
 
         _categoryRepositoryMock
@@ -287,7 +286,6 @@ public class UploadDocumentServiceTests
                 IsActive = true
             });
 
-        // ensure document type exists and requires expiration so the service validates expiration
         _documentTypeRepositoryMock
             .Setup(x => x.GetByIdAsync(documentTypeId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CloudDocs.Domain.Entities.DocumentTypeEntity { Id = documentTypeId, Name = "Contract", IsActive = true });
@@ -313,13 +311,17 @@ public class UploadDocumentServiceTests
                 IsActive = true
             });
 
+        _clientRepositoryMock
+            .Setup(x => x.GetByIdAsync(clientId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Client?)null);
+
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
         var service = CreateService();
 
         var act = async () => await service.UploadAsync(userId, stream, request);
 
         await act.Should().ThrowAsync<BadRequestException>()
-            .WithMessage("Expiration date or pending definition is required for this document type.");
+            .WithMessage("Client not found or inactive.");
     }
 
     /// <summary>
@@ -332,9 +334,9 @@ public class UploadDocumentServiceTests
         var categoryId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var documentTypeId = Guid.NewGuid();
-
         var accessLevelId = Guid.NewGuid();
         var departmentId = Guid.NewGuid();
+        var clientId = Guid.NewGuid();
         var request = new UploadDocumentRequest(
             "contract.pdf",
             "application/pdf",
@@ -343,9 +345,9 @@ public class UploadDocumentServiceTests
             documentTypeId,
             new DateTime(2026, 12, 31),
             false,
-            accessLevelId, // Updated access level
-            Guid.Empty,
-            new List<Guid> { departmentId }); // Updated department list
+            accessLevelId,
+            clientId,
+            new List<Guid> { departmentId });
 
         var category = new Category
         {
@@ -385,6 +387,13 @@ public class UploadDocumentServiceTests
             IsActive = true
         };
 
+        var client = new Client
+        {
+            Id = clientId,
+            Name = "Contoso",
+            IsActive = true
+        };
+
         _categoryRepositoryMock
             .Setup(x => x.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(category);
@@ -400,6 +409,10 @@ public class UploadDocumentServiceTests
         _accessLevelRepositoryMock
             .Setup(x => x.GetByIdAsync(accessLevelId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(accessLevelEntity);
+
+        _clientRepositoryMock
+            .Setup(x => x.GetByIdAsync(clientId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(client);
 
         _departmentRepositoryMock
             .Setup(x => x.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
@@ -424,6 +437,8 @@ public class UploadDocumentServiceTests
         result.AccessLevelId.Should().Be(accessLevelId);
         result.AccessLevelName.Should().Be("Department Only");
         result.AccessLevelCode.Should().Be("DEPARTMENT_ONLY");
+        result.ClientId.Should().Be(clientId);
+        result.ClientName.Should().Be("Contoso");
         result.VisibleDepartments.Should().ContainSingle()
             .Which.Name.Should().Be("Finance");
         result.ExpirationDate.Should().Be(new DateTime(2026, 12, 31));
