@@ -20,7 +20,7 @@ public class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
             .Must(id => id != Guid.Empty).WithMessage("Department is invalid.")
             .When(x => x.DepartmentId.HasValue);
 
-        RuleFor(x => x.Password)
+        RuleFor(x => x.Password!)
             .ApplyPasswordRules()
             .When(x => !string.IsNullOrWhiteSpace(x.Password));
 

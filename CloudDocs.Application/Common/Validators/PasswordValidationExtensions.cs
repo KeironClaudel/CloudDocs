@@ -27,4 +27,5 @@ public static class PasswordValidationExtensions
             .Matches("[^a-zA-Z0-9]")
                 .WithMessage("Password must contain at least one special character.");
     }
+
 }
