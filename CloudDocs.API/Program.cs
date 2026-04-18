@@ -81,12 +81,15 @@ using CloudDocs.Infrastructure.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using System.Text;
+using System.Text.Json;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -197,6 +200,46 @@ builder.Services.AddScoped<AuthCookieHelper>();
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json";
+
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter = Math.Ceiling(retryAfter.TotalSeconds).ToString();
+        }
+
+        var response = new CloudDocs.API.Middleware.ApiErrorResponse
+        {
+            StatusCode = StatusCodes.Status429TooManyRequests,
+            Message = "Too many requests. Please try again later."
+        };
+
+        await context.HttpContext.Response.WriteAsync(
+            JsonSerializer.Serialize(response),
+            cancellationToken);
+    };
+
+    options.AddPolicy(RateLimitPolicyNames.AuthStrict, httpContext =>
+    {
+        var partitionKey = GetClientPartitionKey(httpContext);
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    });
+});
 
 // Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -381,6 +424,7 @@ app.UseHttpsRedirection();
 app.UseCors("FrontendPolicy");
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -394,3 +438,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+static string GetClientPartitionKey(HttpContext httpContext)
+{
+    return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown-ip";
+}

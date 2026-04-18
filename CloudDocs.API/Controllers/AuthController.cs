@@ -9,6 +9,7 @@ using CloudDocs.Application.Features.Auth.RefreshToken;
 using CloudDocs.Application.Features.Auth.ResetPassword;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace CloudDocs.API.Controllers;
@@ -97,6 +98,7 @@ public class AuthController : ControllerBase
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("login")]
+    [EnableRateLimiting(RateLimitPolicyNames.AuthStrict)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         var result = await _loginService.LoginAsync(request, cancellationToken);
@@ -118,6 +120,7 @@ public class AuthController : ControllerBase
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("forgot-password")]
+    [EnableRateLimiting(RateLimitPolicyNames.AuthStrict)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
         var response = await _forgotPasswordService.ExecuteAsync(request, cancellationToken);

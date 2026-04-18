@@ -1,3 +1,4 @@
+using CloudDocs.API.Common;
 using CloudDocs.API.Contracts.Documents;
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Features.Documents.Common;
@@ -14,6 +15,7 @@ using CloudDocs.Application.Features.Documents.Versions.GetDocumentVersions;
 using CloudDocs.Application.Features.Documents.Versions.UploadDocumentVersion;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace CloudDocs.API.Controllers;
