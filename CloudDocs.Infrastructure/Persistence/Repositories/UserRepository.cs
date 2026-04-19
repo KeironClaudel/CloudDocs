@@ -30,6 +30,7 @@ public class UserRepository : IUserRepository
     {
         return await _context.Users
             .Include(x => x.Role)
+            .Include(x => x.Department)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
@@ -45,6 +46,7 @@ public class UserRepository : IUserRepository
 
         return await _context.Users
             .Include(x => x.Role)
+            .Include(x => x.Department)
             .FirstOrDefaultAsync(x => x.Email.ToLower() == normalizedEmail, cancellationToken);
     }
 
@@ -57,6 +59,7 @@ public class UserRepository : IUserRepository
     {
         return await _context.Users
             .Include(x => x.Role)
+            .Include(x => x.Department)
             .AsNoTracking()
             .OrderBy(x => x.FullName)
             .ToListAsync(cancellationToken);

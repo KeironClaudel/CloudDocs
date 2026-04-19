@@ -1,5 +1,6 @@
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Services;
+using CloudDocs.Application.Common.Models;
 using CloudDocs.Application.Features.Documents.DeactivateDocument;
 using CloudDocs.Application.Features.Documents.GetDocumentById;
 using CloudDocs.Application.Features.Documents.GetDocumentFile;
@@ -19,6 +20,7 @@ public class DocumentQueryAndStateServicesTests
     private readonly Mock<IDocumentRepository> _documentRepositoryMock = new();
     private readonly Mock<IDocumentAccessService> _documentAccessServiceMock = new();
     private readonly Mock<IFileStorageService> _fileStorageServiceMock = new();
+    private readonly Mock<IAuditLogQueue> _auditLogQueueMock = new();
     private readonly Mock<IAuditService> _auditServiceMock = new();
     private readonly Mock<IDocumentVersionRepository> _documentVersionRepositoryMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
@@ -73,7 +75,7 @@ public class DocumentQueryAndStateServicesTests
         var service = new GetDocumentFileService(
             _documentRepositoryMock.Object,
             _fileStorageServiceMock.Object,
-            _auditServiceMock.Object,
+            _auditLogQueueMock.Object,
             _documentAccessServiceMock.Object,
             _documentVersionRepositoryMock.Object);
 
@@ -97,7 +99,7 @@ public class DocumentQueryAndStateServicesTests
         var service = new GetDocumentFileService(
             _documentRepositoryMock.Object,
             _fileStorageServiceMock.Object,
-            _auditServiceMock.Object,
+            _auditLogQueueMock.Object,
             _documentAccessServiceMock.Object,
             _documentVersionRepositoryMock.Object);
 
@@ -107,15 +109,15 @@ public class DocumentQueryAndStateServicesTests
         result!.Value.FileName.Should().Be("contract.pdf");
         result.Value.ContentType.Should().Be("application/pdf");
 
-        _auditServiceMock.Verify(
-            x => x.LogAsync(
-                user.Id,
-                "Download",
-                "Documents",
-                "Document",
-                documentId.ToString(),
-                "Download document: contract.pdf",
-                null,
+        _auditLogQueueMock.Verify(
+            x => x.QueueAsync(
+                It.Is<AuditLogRequest>(request =>
+                    request.UserId == user.Id &&
+                    request.Action == "Download" &&
+                    request.Module == "Documents" &&
+                    request.EntityName == "Document" &&
+                    request.EntityId == documentId.ToString() &&
+                    request.Details == "Download document: contract.pdf"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

@@ -12,19 +12,14 @@ namespace CloudDocs.Application.Features.Documents.SearchDocuments;
 public class SearchDocumentsService : ISearchDocumentsService
 {
     private readonly IDocumentRepository _documentRepository;
-    private readonly IDocumentAccessService _documentAccessService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SearchDocumentsService"/> class.
     /// </summary>
     /// <param name="documentRepository">The document repository.</param>
-    /// <param name="documentAccessService">The document access service.</param>
-    public SearchDocumentsService(
-        IDocumentRepository documentRepository,
-        IDocumentAccessService documentAccessService)
+    public SearchDocumentsService(IDocumentRepository documentRepository)
     {
         _documentRepository = documentRepository;
-        _documentAccessService = documentAccessService;
     }
 
     /// <summary>
@@ -39,18 +34,14 @@ public class SearchDocumentsService : ISearchDocumentsService
         SearchDocumentsRequest request,
         CancellationToken cancellationToken = default)
     {
-        var result = await _documentRepository.SearchAsync(request, cancellationToken);
-
-        var filteredItems = result.Items
-            .Where(x => _documentAccessService.CanAccessDocument(currentUser, x))
-            .ToList();
+        var result = await _documentRepository.SearchAsync(currentUser, request, cancellationToken);
 
         return new PagedResult<DocumentResponse>
         {
             Page = result.Page,
             PageSize = result.PageSize,
-            TotalCount = filteredItems.Count,
-            Items = filteredItems.Select(x => new DocumentResponse(
+            TotalCount = result.TotalCount,
+            Items = result.Items.Select(x => new DocumentResponse(
                 x.Id,
                 x.OriginalFileName,
                 x.StoredFileName,

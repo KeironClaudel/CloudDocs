@@ -309,6 +309,9 @@ builder.Services.AddScoped<IDocumentAccessService, DocumentAccessService>();
 
 // Auditing services
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddSingleton<AuditLogBackgroundQueue>();
+builder.Services.AddSingleton<IAuditLogQueue>(sp => sp.GetRequiredService<AuditLogBackgroundQueue>());
+builder.Services.AddHostedService(sp => sp.GetRequiredService<AuditLogBackgroundQueue>());
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IGetAuditLogsService, GetAuditLogsService>();
 
@@ -422,6 +425,28 @@ app.UseGlobalExceptionHandling();
 app.UseHttpsRedirection();
 
 app.UseCors("FrontendPolicy");
+
+app.Use(async (context, next) =>
+{
+    var isMultipartUpload =
+        HttpMethods.IsPost(context.Request.Method) &&
+        context.Request.HasFormContentType &&
+        (context.Request.Path.Equals("/api/documents/upload", StringComparison.OrdinalIgnoreCase) ||
+         context.Request.Path.StartsWithSegments("/api/documents", out var remaining) &&
+         remaining.Value is not null &&
+         remaining.Value.EndsWith("/versions", StringComparison.OrdinalIgnoreCase));
+
+    if (isMultipartUpload)
+    {
+        context.Request.EnableBuffering();
+        if (context.Request.Body.CanSeek)
+        {
+            context.Request.Body.Position = 0;
+        }
+    }
+
+    await next();
+});
 
 app.UseAuthentication();
 app.UseRateLimiter();

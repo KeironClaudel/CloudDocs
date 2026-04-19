@@ -1,3 +1,4 @@
+using CloudDocs.Application.Common.Models;
 using CloudDocs.Domain.Entities;
 
 namespace CloudDocs.Application.Common.Interfaces.Persistence;
@@ -21,6 +22,15 @@ public interface IDocumentVersionRepository
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the document version list.</returns>
     Task<List<DocumentVersion>> GetByDocumentIdAsync(Guid documentId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets paged versions by document id.
+    /// </summary>
+    /// <param name="documentId">The document id identifier.</param>
+    /// <param name="page">The page number.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the paged result of document version.</returns>
+    Task<PagedResult<DocumentVersion>> GetPagedByDocumentIdAsync(Guid documentId, int page, int pageSize, CancellationToken cancellationToken = default);
     /// <summary>
     /// Gets the next version number.
     /// </summary>

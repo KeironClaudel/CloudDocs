@@ -42,7 +42,8 @@ public class AzureBlobFileStorageService : IFileStorageService
     {
         var blobClient = _containerClient.GetBlobClient(fileName);
 
-        fileStream.Position = 0;
+        if (fileStream.CanSeek)
+            fileStream.Position = 0;
 
         await blobClient.UploadAsync(fileStream, overwrite: true, cancellationToken);
 
@@ -62,11 +63,7 @@ public class AzureBlobFileStorageService : IFileStorageService
         if (!await blobClient.ExistsAsync(cancellationToken))
             return null;
 
-        var memoryStream = new MemoryStream();
-        await blobClient.DownloadToAsync(memoryStream, cancellationToken);
-        memoryStream.Position = 0;
-
-        return memoryStream;
+        return await blobClient.OpenReadAsync(cancellationToken: cancellationToken);
     }
 
     /// <summary>

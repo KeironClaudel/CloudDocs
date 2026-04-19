@@ -1,3 +1,4 @@
+using CloudDocs.Application.Common.Models;
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +46,41 @@ public class DocumentVersionRepository : IDocumentVersionRepository
             .Where(x => x.DocumentId == documentId)
             .OrderByDescending(x => x.VersionNumber)
             .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets paged versions by document id.
+    /// </summary>
+    /// <param name="documentId">The document id identifier.</param>
+    /// <param name="page">The page number.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the paged result of document version.</returns>
+    public async Task<PagedResult<DocumentVersion>> GetPagedByDocumentIdAsync(Guid documentId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _context.DocumentVersions
+            .Include(x => x.UploadedByUser)
+            .AsNoTracking()
+            .Where(x => x.DocumentId == documentId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderByDescending(x => x.VersionNumber)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<DocumentVersion>
+        {
+            Items = items,
+            Page = normalizedPage,
+            PageSize = normalizedPageSize,
+            TotalCount = totalCount
+        };
     }
 
     /// <summary>

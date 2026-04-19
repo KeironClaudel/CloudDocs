@@ -1,7 +1,7 @@
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Services;
+using CloudDocs.Application.Common.Models;
 using CloudDocs.Domain.Entities;
-using System.Reflection.Metadata;
 
 namespace CloudDocs.Application.Features.Documents.GetDocumentFile;
 
@@ -12,7 +12,7 @@ public class GetDocumentFileService : IGetDocumentFileService
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IFileStorageService _fileStorageService;
-    private readonly IAuditService _auditService;
+    private readonly IAuditLogQueue _auditLogQueue;
     private readonly IDocumentAccessService _documentAccessService;
     private readonly IDocumentVersionRepository _documentVersionRepository;
 
@@ -21,18 +21,19 @@ public class GetDocumentFileService : IGetDocumentFileService
     /// </summary>
     /// <param name="documentRepository">The document repository.</param>
     /// <param name="fileStorageService">The file storage service.</param>
-    /// <param name="auditService">The audit service.</param>
+    /// <param name="auditLogQueue">The audit log queue.</param>
     /// <param name="documentAccessService">The document access service.</param>
+    /// <param name="documentVersionRepository">The document version repository.</param>
     public GetDocumentFileService(
         IDocumentRepository documentRepository,
         IFileStorageService fileStorageService,
-        IAuditService auditService,
+        IAuditLogQueue auditLogQueue,
         IDocumentAccessService documentAccessService,
         IDocumentVersionRepository documentVersionRepository)
     {
         _documentRepository = documentRepository;
         _fileStorageService = fileStorageService;
-        _auditService = auditService;
+        _auditLogQueue = auditLogQueue;
         _documentAccessService = documentAccessService;
         _documentVersionRepository = documentVersionRepository;
     }
@@ -44,7 +45,7 @@ public class GetDocumentFileService : IGetDocumentFileService
     /// <param name="documentId">The document identifier.</param>
     /// <param name="action">The action.</param>
     /// <param name="actorUserId">The actor user id identifier.</param>
-    /// /// <param name="versionId">The document version identifier.</param>
+    /// <param name="versionId">The document version identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the (stream?stream,string file name,string content type) when available; otherwise, null.</returns>
     public async Task<(Stream? Stream, string FileName, string ContentType)?> GetFileAsync(
@@ -79,14 +80,14 @@ public class GetDocumentFileService : IGetDocumentFileService
             fileName = $"{document.OriginalFileName}_v{version.VersionNumber}{document.FileExtension}";
             contentType = document.ContentType;
 
-            await _auditService.LogAsync(
-                actorUserId,
-                action,
-                "Documents",
-                "DocumentVersion",
-                version.Id.ToString(),
-                $"{action} document version {version.VersionNumber} for: {document.OriginalFileName}{document.FileExtension}",
-                null,
+            await _auditLogQueue.QueueAsync(
+                new AuditLogRequest(
+                    actorUserId,
+                    action,
+                    "Documents",
+                    "DocumentVersion",
+                    version.Id.ToString(),
+                    $"{action} document version {version.VersionNumber} for: {document.OriginalFileName}{document.FileExtension}"),
                 cancellationToken);
         }
         else
@@ -95,14 +96,14 @@ public class GetDocumentFileService : IGetDocumentFileService
             fileName = $"{document.OriginalFileName}{document.FileExtension}";
             contentType = document.ContentType;
 
-            await _auditService.LogAsync(
-                actorUserId,
-                action,
-                "Documents",
-                "Document",
-                document.Id.ToString(),
-                $"{action} document: {document.OriginalFileName}{document.FileExtension}",
-                null,
+            await _auditLogQueue.QueueAsync(
+                new AuditLogRequest(
+                    actorUserId,
+                    action,
+                    "Documents",
+                    "Document",
+                    document.Id.ToString(),
+                    $"{action} document: {document.OriginalFileName}{document.FileExtension}"),
                 cancellationToken);
         }
 

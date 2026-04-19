@@ -1,5 +1,4 @@
 using CloudDocs.Application.Common.Interfaces.Persistence;
-using CloudDocs.Application.Common.Interfaces.Services;
 using CloudDocs.Application.Common.Models;
 using CloudDocs.Application.Features.Documents.Common;
 using CloudDocs.Application.Features.Documents.SearchDocuments;
@@ -15,13 +14,10 @@ namespace CloudDocs.Tests.Services.Documents;
 public class SearchDocumentsServiceTests
 {
     private readonly Mock<IDocumentRepository> _documentRepositoryMock = new();
-    private readonly Mock<IDocumentAccessService> _documentAccessServiceMock = new();
 
     private SearchDocumentsService CreateService()
     {
-        return new SearchDocumentsService(
-            _documentRepositoryMock.Object,
-            _documentAccessServiceMock.Object);
+        return new SearchDocumentsService(_documentRepositoryMock.Object);
     }
 
     /// <summary>
@@ -57,7 +53,7 @@ public class SearchDocumentsServiceTests
         };
 
         _documentRepositoryMock
-            .Setup(x => x.SearchAsync(request, It.IsAny<CancellationToken>()))
+            .Setup(x => x.SearchAsync(currentUser, request, It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedResult);
 
         var service = CreateService();
@@ -72,7 +68,7 @@ public class SearchDocumentsServiceTests
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
-    public async Task SearchAsync_ShouldFilterDocumentsByAccess_WhenSearchingDocuments()
+    public async Task SearchAsync_ShouldReturnRepositoryTotalCount_WhenSearchingDocuments()
     {
         var currentUser = new User
         {
@@ -150,22 +146,14 @@ public class SearchDocumentsServiceTests
         };
 
         _documentRepositoryMock
-            .Setup(x => x.SearchAsync(request, It.IsAny<CancellationToken>()))
+            .Setup(x => x.SearchAsync(currentUser, request, It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedResult);
-
-        _documentAccessServiceMock
-            .Setup(x => x.CanAccessDocument(currentUser, accessibleDoc))
-            .Returns(true);
-
-        _documentAccessServiceMock
-            .Setup(x => x.CanAccessDocument(currentUser, restrictedDoc))
-            .Returns(false);
 
         var service = CreateService();
         var result = await service.SearchAsync(currentUser, request);
 
-        result.Items.Should().HaveCount(1);
-        result.Items[0].OriginalFileName.Should().Be("Accessible.pdf");
+        result.Items.Should().HaveCount(2);
+        result.TotalCount.Should().Be(2);
     }
 
     /// <summary>
@@ -236,12 +224,8 @@ public class SearchDocumentsServiceTests
         };
 
         _documentRepositoryMock
-            .Setup(x => x.SearchAsync(request, It.IsAny<CancellationToken>()))
+            .Setup(x => x.SearchAsync(currentUser, request, It.IsAny<CancellationToken>()))
             .ReturnsAsync(pagedResult);
-
-        _documentAccessServiceMock
-            .Setup(x => x.CanAccessDocument(currentUser, document))
-            .Returns(true);
 
         var service = CreateService();
         var result = await service.SearchAsync(currentUser, request);

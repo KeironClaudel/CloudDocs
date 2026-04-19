@@ -19,7 +19,7 @@ public class UploadDocumentVersionServiceTests
     private readonly Mock<IDocumentVersionRepository> _documentVersionRepositoryMock = new();
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly Mock<IFileStorageService> _fileStorageServiceMock = new();
-    private readonly Mock<IAuditService> _auditServiceMock = new();
+    private readonly Mock<IAuditLogQueue> _auditLogQueueMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
     private readonly FileStorageSettings _fileStorageSettings = new()
@@ -35,7 +35,7 @@ public class UploadDocumentVersionServiceTests
             _documentVersionRepositoryMock.Object,
             _userRepositoryMock.Object,
             _fileStorageServiceMock.Object,
-            _auditServiceMock.Object,
+            _auditLogQueueMock.Object,
             Options.Create(_fileStorageSettings),
             _unitOfWorkMock.Object,
             NullLogger<UploadDocumentVersionService>.Instance);
@@ -103,6 +103,8 @@ public class UploadDocumentVersionServiceTests
     [Fact]
     public async Task UploadAsync_ShouldCreateVersionAndUpdateDocument_WhenRequestIsValid()
     {
+        var expectedYear = DateTime.UtcNow.Year.ToString("0000");
+        var expectedMonth = DateTime.UtcNow.Month.ToString("00");
         var documentId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var request = new UploadDocumentVersionRequest("new-version.pdf", "application/pdf", 1200);
@@ -112,7 +114,7 @@ public class UploadDocumentVersionServiceTests
             Id = documentId,
             OriginalFileName = "contract",
             StoredFileName = "old.pdf",
-            StoragePath = "old/path.pdf",
+            StoragePath = Path.Combine("clients", "contoso", "contracts", "old.pdf"),
             ContentType = "application/pdf",
             FileExtension = ".pdf",
             FileSize = 100,
@@ -141,7 +143,7 @@ public class UploadDocumentVersionServiceTests
 
         _fileStorageServiceMock
             .Setup(x => x.SaveFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync("stored/version-2.pdf");
+            .ReturnsAsync((Stream _, string fileName, CancellationToken _) => fileName);
 
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
         var service = CreateService();
@@ -149,11 +151,12 @@ public class UploadDocumentVersionServiceTests
 
         result.DocumentId.Should().Be(documentId);
         result.VersionNumber.Should().Be(2);
-        result.StoragePath.Should().Be("stored/version-2.pdf");
+        result.StoragePath.Should().StartWith(Path.Combine(expectedYear, expectedMonth, "clients", "contoso", "contracts"));
+        result.StoragePath.Should().Contain("versions");
         result.UploadedByUserId.Should().Be(userId);
         result.UploadedByUserName.Should().Be("Keiron");
 
-        document.StoragePath.Should().Be("stored/version-2.pdf");
+        document.StoragePath.Should().Be(result.StoragePath);
         document.ContentType.Should().Be("application/pdf");
         document.FileSize.Should().Be(1200);
         document.FileExtension.Should().Be(".pdf");
@@ -164,7 +167,7 @@ public class UploadDocumentVersionServiceTests
                 It.Is<DocumentVersion>(v =>
                     v.DocumentId == documentId &&
                     v.VersionNumber == 2 &&
-                    v.StoragePath == "stored/version-2.pdf" &&
+                    v.StoragePath == result.StoragePath &&
                     v.UploadedByUserId == userId),
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -177,15 +180,15 @@ public class UploadDocumentVersionServiceTests
             x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
             Times.Once);
 
-        _auditServiceMock.Verify(
-            x => x.LogAsync(
-                userId,
-                "UploadVersion",
-                "Documents",
-                "Document",
-                documentId.ToString(),
-                "Uploaded version 2 for document: contract.pdf",
-                null,
+        _auditLogQueueMock.Verify(
+            x => x.QueueAsync(
+                It.Is<AuditLogRequest>(request =>
+                    request.UserId == userId &&
+                    request.Action == "UploadVersion" &&
+                    request.Module == "Documents" &&
+                    request.EntityName == "Document" &&
+                    request.EntityId == documentId.ToString() &&
+                    request.Details == "Uploaded version 2 for document: contract.pdf"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

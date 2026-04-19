@@ -1,3 +1,4 @@
+using CloudDocs.Application.Common.Helpers;
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Services;
 using CloudDocs.Application.Common.Models;
@@ -17,7 +18,7 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
     private readonly IDocumentVersionRepository _documentVersionRepository;
     private readonly IUserRepository _userRepository;
     private readonly IFileStorageService _fileStorageService;
-    private readonly IAuditService _auditService;
+    private readonly IAuditLogQueue _auditLogQueue;
     private readonly FileStorageSettings _fileStorageSettings;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<UploadDocumentVersionService> _logger;
@@ -29,7 +30,7 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
     /// <param name="documentVersionRepository">The document version repository.</param>
     /// <param name="userRepository">The user repository.</param>
     /// <param name="fileStorageService">The file storage service.</param>
-    /// <param name="auditService">The audit service.</param>
+    /// <param name="auditLogQueue">The audit log queue.</param>
     /// <param name="fileStorageOptions">The file storage options.</param>
     /// <param name="unitOfWork">The unit of work.</param>
     /// <param name="logger">The logger.</param>
@@ -38,7 +39,7 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
         IDocumentVersionRepository documentVersionRepository,
         IUserRepository userRepository,
         IFileStorageService fileStorageService,
-        IAuditService auditService,
+        IAuditLogQueue auditLogQueue,
         IOptions<FileStorageSettings> fileStorageOptions,
         IUnitOfWork unitOfWork,
         ILogger<UploadDocumentVersionService> logger)
@@ -47,7 +48,7 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
         _documentVersionRepository = documentVersionRepository;
         _userRepository = userRepository;
         _fileStorageService = fileStorageService;
-        _auditService = auditService;
+        _auditLogQueue = auditLogQueue;
         _fileStorageSettings = fileStorageOptions.Value;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -101,7 +102,9 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
 
         var nextVersionNumber = await _documentVersionRepository.GetNextVersionNumberAsync(documentId, cancellationToken);
         var uniqueFileName = $"{Guid.NewGuid()}.pdf";
-        var storedPath = await _fileStorageService.SaveFileAsync(fileStream, uniqueFileName, cancellationToken);
+        var uploadedAt = DateTime.UtcNow;
+        var versionStoragePath = StoragePathBuilder.BuildVersionPath(document.StoragePath, document.Id, uniqueFileName, uploadedAt);
+        var storedPath = await _fileStorageService.SaveFileAsync(fileStream, versionStoragePath, cancellationToken);
 
         var version = new DocumentVersion
         {
@@ -111,7 +114,7 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
             StoredFileName = uniqueFileName,
             StoragePath = storedPath,
             UploadedByUserId = user.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = uploadedAt
         };
 
         await _documentVersionRepository.AddAsync(version, cancellationToken);
@@ -121,21 +124,21 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
         document.FileSize = request.FileSize;
         document.ContentType = string.IsNullOrWhiteSpace(request.ContentType) ? "application/pdf" : request.ContentType;
         document.FileExtension = extension.ToLower();
-        document.UpdatedAt = DateTime.UtcNow;
+        document.UpdatedAt = uploadedAt;
         document.UploadedByUserId = user.Id;
-        document.Month = DateTime.UtcNow.Month;
-        document.Year = DateTime.UtcNow.Year;
+        document.Month = uploadedAt.Month;
+        document.Year = uploadedAt.Year;
 
         await _documentRepository.UpdateAsync(document, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        await _auditService.LogAsync(
-            user.Id,
-            "UploadVersion",
-            "Documents",
-            "Document",
-            document.Id.ToString(),
-            $"Uploaded version {version.VersionNumber} for document: {document.OriginalFileName}{document.FileExtension}",
-            null,
+        await _auditLogQueue.QueueAsync(
+            new AuditLogRequest(
+                user.Id,
+                "UploadVersion",
+                "Documents",
+                "Document",
+                document.Id.ToString(),
+                $"Uploaded version {version.VersionNumber} for document: {document.OriginalFileName}{document.FileExtension}"),
             cancellationToken);
 
         _logger.LogInformation(

@@ -70,28 +70,38 @@ public class DocumentRepository : IDocumentRepository
     /// <param name="request">The request data.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the paged result of document.</returns>
-    public async Task<PagedResult<Document>> SearchAsync(SearchDocumentsRequest request, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<Document>> SearchAsync(User currentUser, SearchDocumentsRequest request, CancellationToken cancellationToken = default)
     {
+        var isAdmin = string.Equals(currentUser.Role?.Name, "Admin", StringComparison.OrdinalIgnoreCase);
+        var page = request.Page < 1 ? 1 : request.Page;
+        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+
         var query = _context.Documents
-                    .Include(x => x.Category)
-                    .Include(x => x.Client)
-                    .Include(x => x.DocumentType)
-                    .Include(x => x.AccessLevel)
-                    .Include(x => x.UploadedByUser)
-                    .Include(x => x.DocumentDepartments)
-                        .ThenInclude(dd => dd.Department)
-                    .AsNoTracking()
-                    .AsQueryable();
+            .AsNoTracking()
+            .AsSplitQuery()
+            .AsQueryable();
 
         if (!request.IncludeInactive)
         {
             query = query.Where(x => x.IsActive);
         }
 
+        if (!isAdmin)
+        {
+            var departmentId = currentUser.DepartmentId;
+
+            query = query.Where(x =>
+                x.AccessLevel.Code == "INTERNAL_PUBLIC" ||
+                (x.AccessLevel.Code == "OWNER_ONLY" && x.UploadedByUserId == currentUser.Id) ||
+                (x.AccessLevel.Code == "DEPARTMENT_ONLY" &&
+                 departmentId.HasValue &&
+                 x.DocumentDepartments.Any(dd => dd.DepartmentId == departmentId.Value)));
+        }
+
         if (!string.IsNullOrWhiteSpace(request.Name))
         {
-            var normalizedName = request.Name.Trim().ToLower();
-            query = query.Where(x => x.OriginalFileName.ToLower().Contains(normalizedName));
+            var pattern = $"%{request.Name.Trim()}%";
+            query = query.Where(x => EF.Functions.ILike(x.OriginalFileName, pattern));
         }
 
         if (request.CategoryId.HasValue)
@@ -116,15 +126,22 @@ public class DocumentRepository : IDocumentRepository
 
         var items = await query
             .OrderByDescending(x => x.CreatedAt)
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Include(x => x.Category)
+            .Include(x => x.Client)
+            .Include(x => x.DocumentType)
+            .Include(x => x.AccessLevel)
+            .Include(x => x.UploadedByUser)
+            .Include(x => x.DocumentDepartments)
+                .ThenInclude(dd => dd.Department)
             .ToListAsync(cancellationToken);
 
         return new PagedResult<Document>
         {
             Items = items,
-            Page = request.Page,
-            PageSize = request.PageSize,
+            Page = page,
+            PageSize = pageSize,
             TotalCount = totalCount
         };
     }

@@ -58,6 +58,11 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.HasIndex(x => x.AccessLevelId);
         builder.HasIndex(x => x.IsActive);
         builder.HasIndex(x => x.DocumentTypeId);
+        builder.HasIndex(x => new { x.IsActive, x.CreatedAt });
+        builder.HasIndex(x => new { x.ClientId, x.IsActive, x.CreatedAt });
+        builder.HasIndex(x => new { x.CategoryId, x.IsActive, x.CreatedAt });
+        builder.HasIndex(x => new { x.DocumentTypeId, x.IsActive, x.CreatedAt });
+        builder.HasIndex(x => new { x.Year, x.Month, x.IsActive, x.CreatedAt });
 
     }
 }

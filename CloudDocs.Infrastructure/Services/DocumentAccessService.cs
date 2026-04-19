@@ -22,7 +22,7 @@ public class DocumentAccessService : IDocumentAccessService
             if (isAdmin) return true;
 
             var accessCode = document.AccessLevel?.Code?.Trim().ToUpperInvariant();
-
+            var userDepartmentId = currentUser.DepartmentId;
             var userDept = currentUser.Department?.Name?.Trim();
             return accessCode switch
             {
@@ -30,9 +30,14 @@ public class DocumentAccessService : IDocumentAccessService
                 "ADMIN_ONLY" => false,
                 "OWNER_ONLY" => document.UploadedByUserId == currentUser.Id,
                 "DEPARTMENT_ONLY" => 
-                    !string.IsNullOrWhiteSpace(userDept) &&
                     document.DocumentDepartments != null &&
-                    document.DocumentDepartments.Any(dd => string.Equals(dd.Department?.Name?.Trim(), userDept, StringComparison.OrdinalIgnoreCase)),
+                    (
+                        (userDepartmentId.HasValue &&
+                         document.DocumentDepartments.Any(dd => dd.DepartmentId == userDepartmentId.Value)) ||
+                        (!userDepartmentId.HasValue &&
+                         !string.IsNullOrWhiteSpace(userDept) &&
+                         document.DocumentDepartments.Any(dd => string.Equals(dd.Department?.Name?.Trim(), userDept, StringComparison.OrdinalIgnoreCase)))
+                    ),
                 _ => false
             };
     }

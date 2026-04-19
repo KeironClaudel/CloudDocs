@@ -25,7 +25,7 @@ public class UploadDocumentServiceTests
     private readonly Mock<IDocumentTypeRepository> _documentTypeRepositoryMock = new();
     private readonly Mock<IAccessLevelRepository> _accessLevelRepositoryMock = new();
     private readonly Mock<IDepartmentRepository> _departmentRepositoryMock = new();
-    private readonly Mock<IAuditService> _auditServiceMock = new();
+    private readonly Mock<IAuditLogQueue> _auditLogQueueMock = new();
     private readonly Mock<IDemoPolicyService> _demoPolicyServiceMock = new();
     private readonly Mock<IClientRepository> _clientRepositoryMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
@@ -46,7 +46,7 @@ public class UploadDocumentServiceTests
         _documentRepositoryMock.Object,
         _fileStorageServiceMock.Object,
         options,
-        _auditServiceMock.Object,
+        _auditLogQueueMock.Object,
         _documentVersionRepositoryMock.Object,
         _documentTypeRepositoryMock.Object,
         _accessLevelRepositoryMock.Object,
@@ -331,6 +331,8 @@ public class UploadDocumentServiceTests
     [Fact]
     public async Task UploadAsync_ShouldCreateDocumentAndInitialVersion_WhenRequestIsValid()
     {
+        var expectedYear = DateTime.UtcNow.Year.ToString("0000");
+        var expectedMonth = DateTime.UtcNow.Month.ToString("00");
         var categoryId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var documentTypeId = Guid.NewGuid();
@@ -448,12 +450,32 @@ public class UploadDocumentServiceTests
             x => x.AddAsync(It.IsAny<Document>(), It.IsAny<CancellationToken>()),
             Times.Once);
 
+        _fileStorageServiceMock.Verify(
+            x => x.SaveFileAsync(
+                It.IsAny<Stream>(),
+                It.Is<string>(path =>
+                    path.StartsWith(Path.Combine(expectedYear, expectedMonth, "clients")) &&
+                    path.Contains("contoso") &&
+                    path.Contains("contracts")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
         _documentVersionRepositoryMock.Verify(
             x => x.AddAsync(It.IsAny<DocumentVersion>(), It.IsAny<CancellationToken>()),
             Times.Once);
 
         _unitOfWorkMock.Verify(
             x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _auditLogQueueMock.Verify(
+            x => x.QueueAsync(
+                It.Is<AuditLogRequest>(request =>
+                    request.UserId == userId &&
+                    request.Action == "Upload" &&
+                    request.Module == "Documents" &&
+                    request.EntityName == "Document"),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 }

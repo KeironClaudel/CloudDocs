@@ -26,7 +26,7 @@ public class UploadDocumentService : IUploadDocumentService
     private readonly IAccessLevelRepository _accessLevelRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IDepartmentRepository _departmentRepository;
-    private readonly IAuditService _auditService;
+    private readonly IAuditLogQueue _auditLogQueue;
     private readonly IDemoPolicyService _demoPolicyService;
     private readonly IClientRepository _clientRepository;
     private readonly ILogger<UploadDocumentService> _logger;
@@ -39,7 +39,7 @@ public class UploadDocumentService : IUploadDocumentService
     /// <param name="documentRepository">The document repository.</param>
     /// <param name="fileStorageService">The file storage service.</param>
     /// <param name="fileStorageOptions">The file storage options.</param>
-    /// <param name="auditService">The audit service.</param>
+    /// <param name="auditLogQueue">The audit log queue.</param>
     /// <param name="documentVersionRepository">The document version repository.</param>
     /// <param name="documentTypeRepository">The document type repository.</param>
     /// <param name="accessLevelRepository">The document access level repository.</param>
@@ -54,7 +54,7 @@ public class UploadDocumentService : IUploadDocumentService
         IDocumentRepository documentRepository,
         IFileStorageService fileStorageService,
         IOptions<FileStorageSettings> fileStorageOptions,
-        IAuditService auditService,
+        IAuditLogQueue auditLogQueue,
         IDocumentVersionRepository documentVersionRepository,
         IDocumentTypeRepository documentTypeRepository,
         IAccessLevelRepository accessLevelRepository,
@@ -69,7 +69,7 @@ public class UploadDocumentService : IUploadDocumentService
         _documentRepository = documentRepository;
         _fileStorageService = fileStorageService;
         _fileStorageSettings = fileStorageOptions.Value;
-        _auditService = auditService;
+        _auditLogQueue = auditLogQueue;
         _documentVersionRepository = documentVersionRepository;
         _documentTypeRepository = documentTypeRepository;
         _accessLevelRepository = accessLevelRepository;
@@ -160,11 +160,13 @@ public class UploadDocumentService : IUploadDocumentService
             throw new BadRequestException("Original file name is invalid.");
 
         var uniqueFileName = $"{Guid.NewGuid()}.pdf";
+        var uploadedAt = DateTime.UtcNow;
 
         var storagePath = StoragePathBuilder.BuildClientCategoryPath(
             client.Name,
             category.Name,
-            uniqueFileName);
+            uniqueFileName,
+            uploadedAt);
 
         var currentDocumentCount = await _documentRepository.CountByUserAsync(user.Id, cancellationToken);
 
@@ -188,8 +190,8 @@ public class UploadDocumentService : IUploadDocumentService
             StoragePath = storedPath,
             CategoryId = category.Id,
             UploadedByUserId = user.Id,
-            Month = DateTime.UtcNow.Month,
-            Year = DateTime.UtcNow.Year,
+            Month = uploadedAt.Month,
+            Year = uploadedAt.Year,
             DocumentTypeId = documentType.Id,
             DocumentType = documentType,
             ExpirationDate = request.ExpirationDate,
@@ -199,7 +201,7 @@ public class UploadDocumentService : IUploadDocumentService
             ClientId = client.Id,
             Client = client,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = uploadedAt
         };
 
         if (selectedDepartments.Count > 0)
@@ -223,7 +225,7 @@ public class UploadDocumentService : IUploadDocumentService
             StoredFileName = document.StoredFileName,
             StoragePath = document.StoragePath,
             UploadedByUserId = user.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = uploadedAt
         };
 
         await _documentVersionRepository.AddAsync(initialVersion, cancellationToken);
@@ -235,15 +237,15 @@ public class UploadDocumentService : IUploadDocumentService
                                 user.Id,
                                 document.OriginalFileName);
 
-        await _auditService.LogAsync(
-                                    user.Id,
-                                    "Upload",
-                                    "Documents",
-                                    "Document",
-                                    document.Id.ToString(),
-                                    $"Document uploaded: {document.OriginalFileName}{document.FileExtension}",
-                                    null,
-                                    cancellationToken);
+        await _auditLogQueue.QueueAsync(
+            new AuditLogRequest(
+                user.Id,
+                "Upload",
+                "Documents",
+                "Document",
+                document.Id.ToString(),
+                $"Document uploaded: {document.OriginalFileName}{document.FileExtension}"),
+            cancellationToken);
 
         var visibleDepartments = selectedDepartments.Count > 0
             ? selectedDepartments.Select(d => new DocumentDepartmentResponse(d.Id, d.Name)).ToList()

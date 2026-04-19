@@ -88,12 +88,13 @@ public class LocalFileStorageService : IFileStorageService
         if (!File.Exists(fullPath))
             return null;
 
-        var memoryStream = new MemoryStream();
-        await using var fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        await fileStream.CopyToAsync(memoryStream, cancellationToken);
-        memoryStream.Position = 0;
-
-        return memoryStream;
+        return new FileStream(
+            fullPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 64 * 1024,
+            options: FileOptions.Asynchronous | FileOptions.SequentialScan);
     }
 
     /// <summary>
