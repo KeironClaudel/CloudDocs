@@ -162,7 +162,7 @@ public class ClientServicesTests
         var createdAt = DateTime.UtcNow;
         _clientRepositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Client>
         {
-            new() { Id = Guid.NewGuid(), Name = "Contoso", LegalName = "Contoso Ltd", IsActive = true, CreatedAt = createdAt }
+            new() { Id = Guid.NewGuid(), Name = "Contoso", LegalName = "Contoso Ltd", Identification = "ID-001", IsActive = true, CreatedAt = createdAt }
         });
 
         var result = await CreateGetAllService().GetAllAsync();
@@ -170,6 +170,32 @@ public class ClientServicesTests
         result.Should().ContainSingle();
         result[0].Name.Should().Be("Contoso");
         result[0].LegalName.Should().Be("Contoso Ltd");
+        result[0].DisplayName.Should().Be("Contoso - ID-001");
+    }
+
+    [Fact]
+    public async Task SearchByNameAsync_ShouldReturnDisplayName_WithIdentification_WhenAvailable()
+    {
+        _clientRepositoryMock
+            .Setup(x => x.SearchByNameAsync("Cont", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Client>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Keiron Claudel",
+                    Identification = "123456789",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
+            });
+
+        var result = await CreateSearchService().SearchByNameAsync("Cont");
+
+        result.Should().ContainSingle();
+        result[0].Name.Should().Be("Keiron Claudel");
+        result[0].Identification.Should().Be("123456789");
+        result[0].DisplayName.Should().Be("Keiron Claudel - 123456789");
     }
 
     [Fact]
