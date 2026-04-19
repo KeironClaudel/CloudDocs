@@ -5,7 +5,7 @@ using CloudDocs.Application.Common.Interfaces.Services;
 using CloudDocs.Application.Common.Models;
 using CloudDocs.Application.Features.Documents.Common;
 using CloudDocs.Domain.Entities;
-using CloudDocs.Domain.Enums;
+using CloudDocs.Application.Common.Helpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -194,7 +194,7 @@ public class UploadDocumentService : IUploadDocumentService
             Year = uploadedAt.Year,
             DocumentTypeId = documentType.Id,
             DocumentType = documentType,
-            ExpirationDate = request.ExpirationDate,
+            ExpirationDate = DateTimeHelper.EnsureUtc(request.ExpirationDate),
             ExpirationDatePendingDefinition = request.ExpirationDatePendingDefinition,
             AccessLevelId = accessLevel.Id,
             AccessLevel = accessLevel,
