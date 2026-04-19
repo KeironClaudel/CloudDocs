@@ -67,7 +67,7 @@ public class ClientsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> Create([FromBody] CreateClientRequest request, CancellationToken cancellationToken)
     {
         var result = await _createClientService.CreateAsync(request, cancellationToken);
@@ -75,7 +75,7 @@ public class ClientsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateClientRequest request, CancellationToken cancellationToken)
     {
         var result = await _updateClientService.UpdateAsync(id, request, cancellationToken);
@@ -87,7 +87,7 @@ public class ClientsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/deactivate")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
     {
         var success = await _deactivateClientService.DeactivateAsync(id, cancellationToken);
@@ -99,7 +99,7 @@ public class ClientsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/reactivate")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> Reactivate(Guid id, CancellationToken cancellationToken)
     {
         var success = await _reactivateClientService.ReactivateAsync(id, cancellationToken);
