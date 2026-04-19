@@ -326,7 +326,6 @@ public class DocumentsController : ControllerBase
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPatch("{id:guid}/deactivate")]
-    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
     {
         var success = await _deactivateDocumentService.DeactivateAsync(id, cancellationToken);
@@ -468,7 +467,6 @@ public class DocumentsController : ControllerBase
     /// <param name="cancellationToken"> The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPatch("{id:guid}/visibility")]
-    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateVisibility(
     Guid id,
     [FromBody] UpdateDocumentVisibilityRequest request,
@@ -490,7 +488,6 @@ public class DocumentsController : ControllerBase
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the action result.</returns>
     [HttpPost("{id:guid}/send-to-client")]
-    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> SendToClient(
     Guid id,
     [FromBody] SendDocumentToClientRequest request,
