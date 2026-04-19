@@ -22,6 +22,10 @@ Recent updates reflected in this version:
 - Departments and clients are part of the document flow
 - Document visibility can be updated after upload
 - File storage supports both local disk and Azure Blob Storage
+- Document search is paginated server-side
+- Document previews/downloads and uploads use streaming
+- Read/write document audit logging uses a background queue for hot paths
+- File storage now groups documents by `yyyy/mm/clients/client/category`
 
 ---
 
@@ -128,6 +132,7 @@ These catalogs are stored in the database and can be managed at runtime.
 - Associate documents with categories, clients, document types, and access levels
 - Attach department visibility rules
 - Rename, deactivate, reactivate, and query documents
+- Search documents with server-side pagination
 - Update visibility after upload
 - Download or preview the latest file or a specific version
 - Send documents to clients by email
@@ -146,6 +151,7 @@ The upload contract currently accepts:
 - Automatic initial version on upload
 - Upload new versions
 - Retrieve full version history
+- Retrieve paginated version history
 - Download and preview by specific version
 
 ### 🔍 Access Control
@@ -198,6 +204,14 @@ The API supports two storage modes:
 - `AzureBlob`
 
 `Storage:Provider` selects which implementation is registered at runtime.
+
+Current logical storage layout for uploaded files is:
+
+```text
+yyyy/mm/clients/{client-slug}/{category-slug}/{guid}.pdf
+```
+
+Version uploads are stored under the same hierarchy, inside a `versions/{document-id}` branch.
 
 ---
 
@@ -281,6 +295,8 @@ https://localhost:xxxx/health
 - `GET /api/departments`
 - `GET /api/departments/{id}`
 - `PUT /api/departments/{id}`
+- `PATCH /api/departments/{id}/deactivate`
+- `PATCH /api/departments/{id}/reactivate`
 
 ### Clients
 
@@ -289,6 +305,8 @@ https://localhost:xxxx/health
 - `GET /api/clients/search?term=...`
 - `GET /api/clients/{id}`
 - `PUT /api/clients/{id}`
+- `PATCH /api/clients/{id}/deactivate`
+- `PATCH /api/clients/{id}/reactivate`
 
 ### Categories
 
@@ -296,6 +314,8 @@ https://localhost:xxxx/health
 - `GET /api/categories`
 - `GET /api/categories/{id}`
 - `PUT /api/categories/{id}`
+- `PATCH /api/categories/{id}/deactivate`
+- `PATCH /api/categories/{id}/reactivate`
 
 ### Document Types
 
@@ -303,13 +323,16 @@ https://localhost:xxxx/health
 - `GET /api/document-types`
 - `GET /api/document-types/{id}`
 - `PUT /api/document-types/{id}`
+- `PATCH /api/document-types/{id}/deactivate`
+- `PATCH /api/document-types/{id}/reactivate`
 
 ### Access Levels
 
-- `POST /api/access-levels`
 - `GET /api/access-levels`
 - `GET /api/access-levels/{id}`
 - `PUT /api/access-levels/{id}`
+- `PATCH /api/access-levels/{id}/deactivate`
+- `PATCH /api/access-levels/{id}/reactivate`
 
 ### Documents
 
@@ -318,8 +341,12 @@ https://localhost:xxxx/health
 - `GET /api/documents/{id}`
 - `GET /api/documents/{id}/preview`
 - `GET /api/documents/{id}/download`
+- `PUT /api/documents/{id}/rename`
 - `GET /api/documents/{id}/versions`
+- `GET /api/documents/{id}/versions/paged`
 - `POST /api/documents/{id}/versions`
+- `PATCH /api/documents/{id}/deactivate`
+- `PATCH /api/documents/{id}/reactivate`
 - `PATCH /api/documents/{id}/visibility`
 - `POST /api/documents/{id}/send-to-client`
 
@@ -340,7 +367,7 @@ The solution includes unit tests with:
 Current test suite size:
 
 - 31 test files
-- 127 `[Fact]` test cases
+- 128 `[Fact]` test cases
 
 Coverage includes:
 
@@ -367,6 +394,10 @@ Access levels and document types are stored as entities instead of hardcoded enu
 
 Document visibility combines access level rules with department-specific restrictions.
 
+### ✅ Paged document listing
+
+`GET /api/documents` already supports `page` and `pageSize`, so frontend consumers should request the first page and paginate incrementally instead of loading the full corpus at once.
+
 ### ✅ Global exception handling
 
 Errors are normalized through middleware for consistent API responses.
@@ -374,6 +405,10 @@ Errors are normalized through middleware for consistent API responses.
 ### ✅ Pluggable storage
 
 The API can run with local storage in development and Azure Blob Storage in cloud scenarios.
+
+### ✅ Streaming file pipeline
+
+Uploads, previews, and downloads avoid loading full files into memory, which keeps the API more stable as document volume grows.
 
 ### ✅ Defensive auth flow
 
