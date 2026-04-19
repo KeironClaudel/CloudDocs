@@ -115,7 +115,7 @@ Documents support different access levels:
 - **InternalPublic** → All authenticated users
 - **Private** → Owner only
 - **AdminOnly** → Admin users only
-- **DepartmentOnly** → Same department or admin
+- **DepartmentOnly** → Same department or specific ones
 
 ### 📊 Audit Logs
 
