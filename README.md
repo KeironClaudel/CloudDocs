@@ -1,40 +1,42 @@
 # 📂 CloudDocs API
 
-A robust document management system (DMS) built with .NET 8, following Clean Architecture, designed to handle secure document storage, versioning, and access control in enterprise environments.
+Document management backend built with .NET 8 and Clean Architecture. The API handles secure document storage, configurable visibility rules, document versioning, client delivery flows, and administrative catalogs for enterprise-style document operations.
 
 ---
 
 ## 🚀 Overview
 
-CloudDocs is a backend API that allows organizations to:
+CloudDocs allows organizations to:
 
-- Store and manage documents securely
-- Maintain version history of documents
-- Control access based on roles, ownership, and departments
-- Track actions through audit logs
-- Authenticate users using JWT with refresh tokens
+- Store and version documents securely
+- Manage users, departments, clients, categories, document types, and access levels
+- Control visibility with configurable access levels and department-based restrictions
+- Deliver documents to clients by email
+- Authenticate users with JWT + refresh tokens stored in cookies
+- Audit security-sensitive and business-critical actions
 
-This project is designed as a scalable and maintainable backend system, suitable for real-world business use cases.
+Recent updates reflected in this version:
 
-Recent changes (short):
-
-- Document types and access levels were moved to configurable database entities so they can be managed at runtime.
-- Departments are modelled as entities and documents support a many-to-many relation to departments for visibility.
+- Rate limiting is already implemented for `POST /api/auth/login` and `POST /api/auth/forgot-password`
+- Document types and access levels are configurable database entities
+- Departments and clients are part of the document flow
+- Document visibility can be updated after upload
+- File storage supports both local disk and Azure Blob Storage
 
 ---
 
 ## 🧠 Architecture
 
-The solution follows **Clean Architecture principles**:
+The solution follows Clean Architecture principles:
 
-```
+```text
 CloudDocs
 │
-├── CloudDocs.API            # Presentation layer (Controllers, Middleware)
-├── CloudDocs.Application    # Business logic (Use Cases, Services, DTOs)
-├── CloudDocs.Domain         # Core entities and enums
-├── CloudDocs.Infrastructure # Persistence, external services (EF Core, Storage)
-└── CloudDocs.Tests          # Unit tests (xUnit, Moq)
+├── CloudDocs.API            # Controllers, middleware, configuration
+├── CloudDocs.Application    # Use cases, validators, DTOs, service contracts
+├── CloudDocs.Domain         # Entities and domain rules
+├── CloudDocs.Infrastructure # EF Core, repositories, storage, email, security
+└── CloudDocs.Tests          # Unit tests
 ```
 
 ### Patterns used
@@ -43,26 +45,26 @@ CloudDocs
 - Repository Pattern
 - Unit of Work
 - Dependency Injection
-- Middleware for exception handling
+- Global exception handling middleware
+- FluentValidation for request validation
 - CQRS-style service separation
 
 ---
-
-Notes about the updated domain model:
-
-- `AccessLevelEntity`, `DocumentTypeEntity`, and `Department` are domain entities under `CloudDocs.Domain.Entities` and persisted via EF in `CloudDocs.Infrastructure`.
-- The document visibility model changed: `Document` now relates to departments via `DocumentDepartment` (many-to-many). This impacts repositories and upload flow.
 
 ## 🛠️ Tech Stack
 
 - .NET 8
 - C#
+- ASP.NET Core Web API
 - Entity Framework Core
-- SQL Server
+- PostgreSQL support
 - JWT Authentication + Refresh Tokens
-- BCrypt (Password Hashing)
-- xUnit + Moq (Testing)
-- FluentAssertions
+- Cookie-based auth token handling
+- BCrypt password hashing
+- ASP.NET Core Rate Limiting
+- MailKit for email delivery
+- Azure Blob Storage or local file storage
+- xUnit + Moq + FluentAssertions
 - Swagger / OpenAPI
 
 ---
@@ -70,11 +72,28 @@ Notes about the updated domain model:
 ## 🔐 Authentication & Security
 
 - JWT-based authentication
-- Refresh token mechanism
+- Refresh token rotation flow
+- Auth cookies for access and refresh tokens
 - Password hashing with BCrypt
-- Account lockout after multiple failed attempts
-- Role-based authorization (Admin / User)
-- Fine-grained document access control
+- Account lockout after repeated failed logins
+- Role-based authorization
+- Fine-grained document visibility rules
+- Rate limiting for login and forgot-password endpoints
+
+### Rate limiting
+
+The API configures an `AuthStrict` fixed-window policy in [`Program.cs`](C:/Users/Keiron/source/repos/CloudDocs/CloudDocs.API/Program.cs) with:
+
+- 5 requests per minute
+- Partitioning by client IP
+- HTTP `429 Too Many Requests` on rejection
+- `Retry-After` response header when available
+- JSON error response for throttled requests
+
+This policy is currently applied to:
+
+- `POST /api/auth/login`
+- `POST /api/auth/forgot-password`
 
 ---
 
@@ -82,50 +101,103 @@ Notes about the updated domain model:
 
 ### 👤 Users
 
-- Create, update, deactivate users
+- Create, update, deactivate, and reactivate users
 - Role assignment
-- Department support
+- Department assignment
+- Admin password reset support
+
+### 🏢 Departments
+
+- Create, list, update, deactivate, and reactivate departments
+
+### 🤝 Clients
+
+- Create, list, search, update, deactivate, and reactivate clients
+
+### 🗂️ Catalogs
+
+- Manage categories
+- Manage document types
+- Manage access levels
+
+These catalogs are stored in the database and can be managed at runtime.
 
 ### 📄 Documents
 
-- Upload PDF documents
-- Metadata support (category, type, expiration, etc.)
-- Search with filters:
-  - Name
-  - Category
-  - Month / Year
+- Upload PDF documents with metadata
+- Associate documents with categories, clients, document types, and access levels
+- Attach department visibility rules
+- Rename, deactivate, reactivate, and query documents
+- Update visibility after upload
+- Download or preview the latest file or a specific version
+- Send documents to clients by email
 
-Update notes (documents):
+The upload contract currently accepts:
 
-- The upload contract now accepts `DocumentTypeId` and `AccessLevelId` (both GUIDs) and `DepartmentIds` (List<Guid>) when appropriate.
-- Access levels and document types are now configurable from the database rather than fixed enums.
+- `CategoryId`
+- `ClientId`
+- `DocumentTypeId`
+- `AccessLevelId`
+- `DepartmentIds`
+- Expiration metadata
 
 ### 🧾 Document Versioning
 
-- Automatic version 1 on upload
+- Automatic initial version on upload
 - Upload new versions
-- Full version history per document
-
-Response update: `DocumentResponse` now includes `AccessLevelId`, `AccessLevelName`, `AccessLevelCode` and `VisibleDepartments` (list of departments allowed to see the document).
+- Retrieve full version history
+- Download and preview by specific version
 
 ### 🔍 Access Control
 
-Documents support different access levels:
+Access levels are configurable entities, and the seeded defaults are:
 
-- **InternalPublic** → All authenticated users
-- **Private** → Owner only
-- **AdminOnly** → Admin users only
-- **DepartmentOnly** → Same department or specific ones
+- `INTERNAL_PUBLIC`
+- `ADMIN_ONLY`
+- `OWNER_ONLY`
+- `DEPARTMENT_ONLY`
+
+Documents can also be restricted to specific departments through the `DocumentDepartment` relation.
 
 ### 📊 Audit Logs
 
-Tracks:
+Tracks relevant actions such as:
 
-- Login attempts
-- Document actions
-- Token usage
+- Authentication events
+- Document operations
+- Security-sensitive flows
 
-Read-only audit queries included.
+The API includes read-only audit log queries for administration/reporting scenarios.
+
+### ❤️ Health Checks
+
+- `GET /health`
+
+---
+
+## ⚙️ Configuration
+
+Main configuration currently lives in [`CloudDocs.API/appsettings.json`](C:/Users/Keiron/source/repos/CloudDocs/CloudDocs.API/appsettings.json).
+
+Key sections:
+
+- `ConnectionStrings:DefaultConnection`
+- `JwtSettings`
+- `Storage`
+- `FileStorage`
+- `AzureBlob`
+- `Frontend`
+- `AuthCookies`
+- `Demo`
+
+### Storage providers
+
+The API supports two storage modes:
+
+- `Local`
+- `AzureBlob`
+
+`Storage:Provider` selects which implementation is registered at runtime.
 
 ---
 
@@ -134,33 +206,32 @@ Read-only audit queries included.
 ### 1. Clone repository
 
 ```bash
-git clone https://github.com/your-username/CloudDocs.git
+git clone https://github.com/KeironClaudel/CloudDocs.git
 cd CloudDocs
 ```
 
-### 2. Configure database
+### 2. Configure application settings
 
-Update your connection string in:
+Set the required values in:
 
-```
+```text
 CloudDocs.API/appsettings.json
 ```
+
+At minimum:
+
+- PostgreSQL connection string
+- JWT secret
+- Frontend base URL
+- Email settings if you will use client delivery flows
+- Azure Blob settings if using `Storage:Provider = AzureBlob`
 
 ### 3. Apply migrations
 
 ```bash
 dotnet ef database update \
---project CloudDocs.Infrastructure \
---startup-project CloudDocs.API
-```
-
-If you changed the model to move AccessLevel or DocumentType from enum to entity, create a migration first:
-
-```pwsh
-dotnet ef migrations add ReplaceAccessLevelEnumWithEntity \
-  --project .\CloudDocs.Infrastructure\CloudDocs.Infrastructure.csproj \
-  --startup-project .\CloudDocs.API\CloudDocs.API.csproj \
-  --output-dir Persistence/Migrations
+  --project CloudDocs.Infrastructure \
+  --startup-project CloudDocs.API
 ```
 
 ### 4. Run the API
@@ -169,10 +240,16 @@ dotnet ef migrations add ReplaceAccessLevelEnumWithEntity \
 dotnet run --project CloudDocs.API
 ```
 
-Swagger will be available at:
+Swagger is available at:
 
-```
+```text
 https://localhost:xxxx/swagger
+```
+
+Health checks are available at:
+
+```text
+https://localhost:xxxx/health
 ```
 
 ---
@@ -181,9 +258,58 @@ https://localhost:xxxx/swagger
 
 ### Auth
 
+- `GET /api/auth/me`
 - `POST /api/auth/login`
+- `POST /api/auth/forgot-password`
+- `POST /api/auth/reset-password`
+- `POST /api/auth/change-password`
 - `POST /api/auth/refresh-token`
 - `POST /api/auth/logout`
+
+### Users
+
+- `POST /api/users`
+- `GET /api/users`
+- `GET /api/users/{id}`
+- `PUT /api/users/{id}`
+- `PATCH /api/users/{id}/deactivate`
+- `PATCH /api/users/{id}/reactivate`
+
+### Departments
+
+- `POST /api/departments`
+- `GET /api/departments`
+- `GET /api/departments/{id}`
+- `PUT /api/departments/{id}`
+
+### Clients
+
+- `POST /api/clients`
+- `GET /api/clients`
+- `GET /api/clients/search?term=...`
+- `GET /api/clients/{id}`
+- `PUT /api/clients/{id}`
+
+### Categories
+
+- `POST /api/categories`
+- `GET /api/categories`
+- `GET /api/categories/{id}`
+- `PUT /api/categories/{id}`
+
+### Document Types
+
+- `POST /api/document-types`
+- `GET /api/document-types`
+- `GET /api/document-types/{id}`
+- `PUT /api/document-types/{id}`
+
+### Access Levels
+
+- `POST /api/access-levels`
+- `GET /api/access-levels`
+- `GET /api/access-levels/{id}`
+- `PUT /api/access-levels/{id}`
 
 ### Documents
 
@@ -192,147 +318,76 @@ https://localhost:xxxx/swagger
 - `GET /api/documents/{id}`
 - `GET /api/documents/{id}/preview`
 - `GET /api/documents/{id}/download`
-
-### Versions
-
 - `GET /api/documents/{id}/versions`
 - `POST /api/documents/{id}/versions`
+- `PATCH /api/documents/{id}/visibility`
+- `POST /api/documents/{id}/send-to-client`
 
-### Users
+### Audit Logs
 
-- `POST /api/users`
-- `PUT /api/users/{id}`
-- `DELETE /api/users/{id}`
+- `GET /api/audit-logs`
 
 ---
 
 ## 🧪 Testing
 
-Unit tests are implemented using:
+The solution includes unit tests with:
 
-- **xUnit** - Test framework
-- **Moq** - Mocking library
-- **FluentAssertions** - Fluent assertion API
+- xUnit
+- Moq
+- FluentAssertions
 
-### Test Coverage
+Current test suite size:
 
-**71 test cases** covering critical business logic and edge cases across 17 services:
+- 31 test files
+- 127 `[Fact]` test cases
 
-#### Authentication & Security (8 tests)
+Coverage includes:
 
-- `LoginServiceTests` - User authentication, account lockout, token generation
-- `LogoutServiceTests` - Token revocation, graceful failure handling
-- `RefreshTokenServiceTests` - Token refresh and validation
-- `ChangePasswordServiceTests` - Password update with validation
-- `ForgotPasswordServiceTests` - Password reset flow, email delivery
-- `ResetPasswordServiceTests` - Token validation, password hashing
+- Authentication flows
+- Users, clients, departments, and catalogs
+- Document upload, search, versioning, visibility, and delivery
+- Audit log queries
 
-#### Users (8 tests)
-
-- `CreateUserServiceTests` - User creation with validation
-- `UpdateUserServiceTests` - User updates, email uniqueness, role changes
-- `GetUsersServiceTests` - User listing and filtering
-
-#### Documents (8 tests)
-
-- `UploadDocumentServiceTests` - File validation, storage, versioning
-- `SearchDocumentsServiceTests` - Search filtering, access control
-- `RenameDocumentServiceTests` - File renaming with permissions
-- `DocumentAccessServiceTests` - Access level validation (Admin, Owner, Public, Department)
-
-#### Configuration (10 tests)
-
-- `CreateAccessLevelServiceTests` - Access level creation
-- `UpdateAccessLevelServiceTests` - Access level updates, duplicate handling
-- `CreateCategoryServiceTests` - Category creation
-- `UpdateCategoryServiceTests` - Category updates with validation
-- `CreateDocumentTypeServiceTests` - Document type creation
-- `CreateDepartmentServiceTests` - Department creation
-- `UpdateDepartmentServiceTests` - Department updates
-
-### Test Scenarios
-
-Each test validates:
-
-- ✅ **Happy paths** - Valid inputs produce expected results
-- ✅ **Error cases** - Invalid inputs throw appropriate exceptions
-- ✅ **Edge cases** - Boundary conditions (empty strings, null values, duplicates)
-- ✅ **Permissions** - Role-based and ownership-based access control
-- ✅ **Audit trails** - Critical operations are logged
-- ✅ **State changes** - Database updates and timestamps are correct
-
-### Run Tests
+Run tests with:
 
 ```bash
-# Run all tests
 dotnet test
-
-# Run with verbose output
-dotnet test --verbosity=normal
-
-# Run specific test file
-dotnet test --filter "FullyQualifiedName~LoginServiceTests"
-
-# Run and get code coverage
-dotnet test /p:CollectCoverage=true /p:CoverageFormat=opencover
-```
-
-### Test Structure
-
-Tests follow the **Arrange-Act-Assert** pattern:
-
-```csharp
-[Fact]
-public async Task LoginAsync_ShouldThrowUnauthorized_WhenUserDoesNotExist()
-{
-    // Arrange
-    var request = new LoginRequest("missing@test.com", "Password123!");
-    _userRepositoryMock.Setup(x => x.GetByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-        .ReturnsAsync((User?)null);
-
-    // Act
-    var service = CreateService();
-    var act = async () => await service.LoginAsync(request);
-
-    // Assert
-    await act.Should().ThrowAsync<UnauthorizedException>()
-        .WithMessage("Invalid credentials.");
-}
 ```
 
 ---
 
 ## 🧱 Key Design Decisions
 
-### ✅ UnitOfWork
+### ✅ Configurable catalogs
 
-Ensures atomic operations across repositories and improves consistency.
+Access levels and document types are stored as entities instead of hardcoded enums so they can evolve without code changes.
 
-### ✅ Global Exception Handler
+### ✅ Visibility model
 
-Centralized error handling with consistent API responses.
+Document visibility combines access level rules with department-specific restrictions.
 
-### ✅ Logging
+### ✅ Global exception handling
 
-Structured logging using `ILogger` for:
+Errors are normalized through middleware for consistent API responses.
 
-- Warnings (validation/auth issues)
-- Errors (unexpected failures)
+### ✅ Pluggable storage
 
-### ✅ Document Versioning
+The API can run with local storage in development and Azure Blob Storage in cloud scenarios.
 
-Prevents data loss and enables auditability of file changes.
+### ✅ Defensive auth flow
+
+Authentication combines lockout logic, refresh tokens, cookies, and rate limiting.
 
 ---
 
 ## 📈 Future Improvements
 
-- Pagination at database level with access filters
-- File storage integration (AWS S3 / Azure Blob)
-- Role-based policy authorization
-- Caching (Redis)
-- Rate limiting
-- Full integration tests
+- Integration and end-to-end API tests
+- Distributed caching
+- More granular authorization policies
+- Background processing for heavier email/document workflows
+- Operational dashboards and metrics
 
 ---
 
@@ -347,7 +402,7 @@ Backend Developer focused on .NET, APIs, and Data Systems
 
 This project demonstrates:
 
-- Strong backend architecture design
-- Secure authentication flows
-- Real-world business logic implementation
-- Clean and testable codebase
+- Secure backend architecture
+- Configurable business rules
+- Real-world document management workflows
+- Maintainable and testable .NET code
