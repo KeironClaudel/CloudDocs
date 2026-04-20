@@ -8,25 +8,55 @@ namespace CloudDocs.Application.Common.Helpers;
 public static class StoragePathBuilder
 {
     /// <summary>
-    /// Builds a storage path for a document based on client and category.
+    /// Builds a storage path for a document based on client, category, and document type.
     /// </summary>
     public static string BuildClientCategoryPath(
         string clientName,
         string categoryName,
+        string documentTypeName,
         string fileName,
         DateTime? uploadDateUtc = null)
     {
-        var clientSlug = Slugify(clientName);
-        var categorySlug = Slugify(categoryName);
-        var effectiveDate = uploadDateUtc ?? DateTime.UtcNow;
+        var baseDirectory = BuildClientCategoryDocumentTypeDirectory(
+            clientName,
+            categoryName,
+            documentTypeName,
+            uploadDateUtc);
 
-        return Path.Combine(
-            effectiveDate.Year.ToString("0000"),
-            effectiveDate.Month.ToString("00"),
-            "clients",
-            clientSlug,
-            categorySlug,
-            fileName);
+        return Path.Combine(baseDirectory, fileName);
+    }
+
+    /// <summary>
+    /// Builds a storage path for a document version under the same client/category/document type hierarchy.
+    /// </summary>
+    public static string BuildVersionPath(
+        string clientName,
+        string categoryName,
+        string documentTypeName,
+        Guid documentId,
+        string fileName,
+        DateTime? uploadDateUtc = null)
+    {
+        var baseDirectory = BuildClientCategoryDocumentTypeDirectory(
+            clientName,
+            categoryName,
+            documentTypeName,
+            uploadDateUtc);
+
+        if (string.IsNullOrWhiteSpace(baseDirectory))
+        {
+            var effectiveDate = uploadDateUtc ?? DateTime.UtcNow;
+
+            return Path.Combine(
+                effectiveDate.Year.ToString("0000"),
+                effectiveDate.Month.ToString("00"),
+                "documents",
+                documentId.ToString("N"),
+                "versions",
+                fileName);
+        }
+
+        return Path.Combine(baseDirectory, "versions", documentId.ToString("N"), fileName);
     }
 
     /// <summary>
@@ -86,6 +116,31 @@ public static class StoragePathBuilder
         normalized = Regex.Replace(normalized, @"\-{2,}", "-");
 
         return normalized.Trim('-');
+    }
+
+    private static string FormatDocumentTypeSegment(string value)
+    {
+        return Slugify(value).ToUpperInvariant();
+    }
+
+    private static string BuildClientCategoryDocumentTypeDirectory(
+        string clientName,
+        string categoryName,
+        string documentTypeName,
+        DateTime? uploadDateUtc = null)
+    {
+        var clientSlug = Slugify(clientName);
+        var categorySlug = Slugify(categoryName);
+        var documentTypeSegment = FormatDocumentTypeSegment(documentTypeName);
+        var effectiveDate = uploadDateUtc ?? DateTime.UtcNow;
+
+        return Path.Combine(
+            effectiveDate.Year.ToString("0000"),
+            effectiveDate.Month.ToString("00"),
+            "Client",
+            clientSlug,
+            categorySlug,
+            documentTypeSegment);
     }
 
     private static bool HasYearMonthPrefix(string directoryPath)

@@ -103,7 +103,15 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
         var nextVersionNumber = await _documentVersionRepository.GetNextVersionNumberAsync(documentId, cancellationToken);
         var uniqueFileName = $"{Guid.NewGuid()}.pdf";
         var uploadedAt = DateTime.UtcNow;
-        var versionStoragePath = StoragePathBuilder.BuildVersionPath(document.StoragePath, document.Id, uniqueFileName, uploadedAt);
+        var versionStoragePath = HasPathMetadata(document)
+            ? StoragePathBuilder.BuildVersionPath(
+                document.Client.Name,
+                document.Category.Name,
+                document.DocumentType.Name,
+                document.Id,
+                uniqueFileName,
+                uploadedAt)
+            : StoragePathBuilder.BuildVersionPath(document.StoragePath, document.Id, uniqueFileName, uploadedAt);
         var storedPath = await _fileStorageService.SaveFileAsync(fileStream, versionStoragePath, cancellationToken);
 
         var version = new DocumentVersion
@@ -156,5 +164,12 @@ public class UploadDocumentVersionService : IUploadDocumentVersionService
             version.UploadedByUserId,
             user.FullName,
             version.CreatedAt);
+    }
+
+    private static bool HasPathMetadata(Document document)
+    {
+        return !string.IsNullOrWhiteSpace(document.Client?.Name) &&
+               !string.IsNullOrWhiteSpace(document.Category?.Name) &&
+               !string.IsNullOrWhiteSpace(document.DocumentType?.Name);
     }
 }

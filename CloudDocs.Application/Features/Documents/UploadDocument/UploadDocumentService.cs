@@ -5,7 +5,6 @@ using CloudDocs.Application.Common.Interfaces.Services;
 using CloudDocs.Application.Common.Models;
 using CloudDocs.Application.Features.Documents.Common;
 using CloudDocs.Domain.Entities;
-using CloudDocs.Application.Common.Helpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -165,6 +164,7 @@ public class UploadDocumentService : IUploadDocumentService
         var storagePath = StoragePathBuilder.BuildClientCategoryPath(
             client.Name,
             category.Name,
+            documentType.Name,
             uniqueFileName,
             uploadedAt);
 

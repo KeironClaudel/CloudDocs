@@ -114,10 +114,22 @@ public class UploadDocumentVersionServiceTests
             Id = documentId,
             OriginalFileName = "contract",
             StoredFileName = "old.pdf",
-            StoragePath = Path.Combine("clients", "contoso", "contracts", "old.pdf"),
+            StoragePath = Path.Combine("2026", "04", "Client", "contoso", "contracts", "CONTRACT", "old.pdf"),
             ContentType = "application/pdf",
             FileExtension = ".pdf",
             FileSize = 100,
+            Client = new Client
+            {
+                Name = "Contoso"
+            },
+            Category = new Category
+            {
+                Name = "Contracts"
+            },
+            DocumentType = new DocumentTypeEntity
+            {
+                Name = "Contract"
+            },
             IsActive = true
         };
 
@@ -151,7 +163,7 @@ public class UploadDocumentVersionServiceTests
 
         result.DocumentId.Should().Be(documentId);
         result.VersionNumber.Should().Be(2);
-        result.StoragePath.Should().StartWith(Path.Combine(expectedYear, expectedMonth, "clients", "contoso", "contracts"));
+        result.StoragePath.Should().StartWith(Path.Combine(expectedYear, expectedMonth, "Client", "contoso", "contracts", "CONTRACT"));
         result.StoragePath.Should().Contain("versions");
         result.UploadedByUserId.Should().Be(userId);
         result.UploadedByUserName.Should().Be("Keiron");

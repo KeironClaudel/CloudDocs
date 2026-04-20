@@ -454,9 +454,10 @@ public class UploadDocumentServiceTests
             x => x.SaveFileAsync(
                 It.IsAny<Stream>(),
                 It.Is<string>(path =>
-                    path.StartsWith(Path.Combine(expectedYear, expectedMonth, "clients")) &&
+                    path.StartsWith(Path.Combine(expectedYear, expectedMonth, "Client")) &&
                     path.Contains("contoso") &&
-                    path.Contains("contracts")),
+                    path.Contains("contracts") &&
+                    path.Contains("CONTRACT")),
                 It.IsAny<CancellationToken>()),
             Times.Once);
 
