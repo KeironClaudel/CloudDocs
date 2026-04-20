@@ -1,92 +1,103 @@
-# 📂 CloudDocs API
+# CloudDocs API
 
 Document management backend built with .NET 8 and Clean Architecture. The API handles secure document storage, configurable visibility rules, document versioning, client delivery flows, and administrative catalogs for enterprise-style document operations.
 
----
-
-## 🚀 Overview
+## Overview
 
 CloudDocs allows organizations to:
 
-- Store and version documents securely
+- Store and version PDF documents securely
 - Manage users, departments, clients, categories, document types, and access levels
 - Control visibility with configurable access levels and department-based restrictions
-- Deliver documents to clients by email
-- Authenticate users with JWT + refresh tokens stored in cookies
+- Deliver documents or specific document versions to clients by email
+- Authenticate users with JWT access tokens plus rotating refresh tokens stored in HTTP-only cookies
 - Audit security-sensitive and business-critical actions
 
-Recent updates reflected in this version:
+The current backend already includes:
 
-- Rate limiting is already implemented for `POST /api/auth/login` and `POST /api/auth/forgot-password`
-- Document types and access levels are configurable database entities
-- Departments and clients are part of the document flow
-- Document visibility can be updated after upload
-- File storage supports both local disk and Azure Blob Storage
-- Document search is paginated server-side
-- Document previews/downloads and uploads use streaming
-- Read/write document audit logging uses a background queue for hot paths
-- File storage now groups documents by `yyyy/mm/clients/client/category`
+- Rate limiting for `POST /api/auth/login` and `POST /api/auth/forgot-password`
+- Configurable document types and access levels stored in the database
+- Department-based visibility updates after upload
+- Local disk and Azure Blob Storage implementations
+- Server-side paginated document search
+- Streamed upload, preview, and download flows
+- Background-queued audit logging for hot document paths
+- Client-aware storage paths grouped by year, month, category, and document type
 
----
-
-## 🧠 Architecture
+## Architecture
 
 The solution follows Clean Architecture principles:
 
 ```text
 CloudDocs
-│
-├── CloudDocs.API            # Controllers, middleware, configuration
-├── CloudDocs.Application    # Use cases, validators, DTOs, service contracts
-├── CloudDocs.Domain         # Entities and domain rules
-├── CloudDocs.Infrastructure # EF Core, repositories, storage, email, security
-└── CloudDocs.Tests          # Unit tests
+|
+|-- CloudDocs.API            # Controllers, middleware, configuration
+|-- CloudDocs.Application    # Use cases, validators, DTOs, service contracts
+|-- CloudDocs.Domain         # Entities and domain rules
+|-- CloudDocs.Infrastructure # EF Core, repositories, storage, email, security
+`-- CloudDocs.Tests          # Unit tests
 ```
 
-### Patterns used
+Patterns used:
 
 - Clean Architecture
 - Repository Pattern
 - Unit of Work
 - Dependency Injection
 - Global exception handling middleware
-- FluentValidation for request validation
+- FluentValidation
 - CQRS-style service separation
 
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 - .NET 8
 - C#
 - ASP.NET Core Web API
 - Entity Framework Core
-- PostgreSQL support
-- JWT Authentication + Refresh Tokens
-- Cookie-based auth token handling
+- PostgreSQL
+- JWT Authentication
+- HTTP-only auth cookies
 - BCrypt password hashing
 - ASP.NET Core Rate Limiting
-- MailKit for email delivery
+- MailKit SMTP email delivery
 - Azure Blob Storage or local file storage
-- xUnit + Moq + FluentAssertions
+- xUnit, Moq, FluentAssertions
 - Swagger / OpenAPI
 
----
+## Authentication And Security
 
-## 🔐 Authentication & Security
+CloudDocs supports bearer auth and cookie-based auth at the same time:
 
-- JWT-based authentication
-- Refresh token rotation flow
-- Auth cookies for access and refresh tokens
+- Access tokens are validated from the `Authorization: Bearer ...` header when present
+- If there is no bearer header, the API falls back to the configured access-token cookie
+- Refresh tokens are stored in a dedicated HTTP-only cookie and rotated on refresh
+
+Current defaults from [`CloudDocs.API/appsettings.json`](./CloudDocs.API/appsettings.json):
+
+- JWT access token expiration: `15` minutes
+- Access token cookie expiration: `15` minutes
+- Refresh token cookie expiration: `7` days
+- `SameSite=None`
+- `Secure=true`
+
+Cookie behavior is implemented in [`CloudDocs.API/Common/AuthCookieHelper.cs`](./CloudDocs.API/Common/AuthCookieHelper.cs):
+
+- Access token cookie path: `/`
+- Refresh token cookie path: `/api/auth`
+- Both cookies use `HttpOnly`
+- Both cookies use `Expires` plus `MaxAge`
+
+Other security features:
+
 - Password hashing with BCrypt
 - Account lockout after repeated failed logins
 - Role-based authorization
 - Fine-grained document visibility rules
-- Rate limiting for login and forgot-password endpoints
+- Rate limiting on auth-sensitive endpoints
 
-### Rate limiting
+### Rate Limiting
 
-The API configures an `AuthStrict` fixed-window policy in [`Program.cs`](C:/Users/Keiron/source/repos/CloudDocs/CloudDocs.API/Program.cs) with:
+The API configures an `AuthStrict` fixed-window policy in [`CloudDocs.API/Program.cs`](./CloudDocs.API/Program.cs) with:
 
 - 5 requests per minute
 - Partitioning by client IP
@@ -94,67 +105,72 @@ The API configures an `AuthStrict` fixed-window policy in [`Program.cs`](C:/User
 - `Retry-After` response header when available
 - JSON error response for throttled requests
 
-This policy is currently applied to:
+This policy is applied to:
 
 - `POST /api/auth/login`
 - `POST /api/auth/forgot-password`
 
----
+## Core Features
 
-## 📂 Core Features
-
-### 👤 Users
+### Users
 
 - Create, update, deactivate, and reactivate users
-- Role assignment
-- Department assignment
-- Admin password reset support
+- Assign role and department
+- Query users by id or list
 
-### 🏢 Departments
+### Departments
 
 - Create, list, update, deactivate, and reactivate departments
 
-### 🤝 Clients
+### Clients
 
 - Create, list, search, update, deactivate, and reactivate clients
 
-### 🗂️ Catalogs
+### Catalogs
 
-- Manage categories
-- Manage document types
-- Manage access levels
+- Categories
+- Document types
+- Access levels
 
 These catalogs are stored in the database and can be managed at runtime.
 
-### 📄 Documents
+### Documents
 
 - Upload PDF documents with metadata
-- Associate documents with categories, clients, document types, and access levels
-- Attach department visibility rules
+- Associate documents with category, client, document type, and access level
+- Attach visible departments for `DEPARTMENT_ONLY` documents
 - Rename, deactivate, reactivate, and query documents
 - Search documents with server-side pagination
 - Update visibility after upload
 - Download or preview the latest file or a specific version
-- Send documents to clients by email
+- Send the current file or a selected version to the assigned client by email
 
-The upload contract currently accepts:
+The upload contract currently includes:
 
 - `CategoryId`
 - `ClientId`
 - `DocumentTypeId`
 - `AccessLevelId`
 - `DepartmentIds`
-- Expiration metadata
+- `ExpirationDate`
+- `ExpirationDatePendingDefinition`
 
-### 🧾 Document Versioning
+Upload rules currently enforced:
 
-- Automatic initial version on upload
-- Upload new versions
+- PDF only
+- Max file size from configuration
+- Demo-mode limits when `Demo:Enabled=true`
+
+### Document Versioning
+
+- Automatic initial version on document upload
+- Upload new versions for existing documents
 - Retrieve full version history
 - Retrieve paginated version history
 - Download and preview by specific version
+- Send a selected version to a client by providing `VersionId`
 
-### 🔍 Access Control
+### Access Control
 
 Access levels are configurable entities, and the seeded defaults are:
 
@@ -165,25 +181,23 @@ Access levels are configurable entities, and the seeded defaults are:
 
 Documents can also be restricted to specific departments through the `DocumentDepartment` relation.
 
-### 📊 Audit Logs
+### Audit Logs
 
 Tracks relevant actions such as:
 
 - Authentication events
-- Document operations
+- Document uploads, versions, visibility changes, and delivery events
 - Security-sensitive flows
 
-The API includes read-only audit log queries for administration/reporting scenarios.
+The API exposes read-only audit log queries for administration/reporting scenarios.
 
-### ❤️ Health Checks
+### Health Checks
 
 - `GET /health`
 
----
+## Storage Model
 
-## ⚙️ Configuration
-
-Main configuration currently lives in [`CloudDocs.API/appsettings.json`](C:/Users/Keiron/source/repos/CloudDocs/CloudDocs.API/appsettings.json).
+Main configuration lives in [`CloudDocs.API/appsettings.json`](./CloudDocs.API/appsettings.json).
 
 Key sections:
 
@@ -196,7 +210,7 @@ Key sections:
 - `AuthCookies`
 - `Demo`
 
-### Storage providers
+### Storage Providers
 
 The API supports two storage modes:
 
@@ -205,26 +219,39 @@ The API supports two storage modes:
 
 `Storage:Provider` selects which implementation is registered at runtime.
 
-Current logical storage layout for uploaded files is:
+### Logical File Layout
+
+The current logical storage layout for new documents is:
 
 ```text
-yyyy/mm/clients/{client-slug}/{category-slug}/{guid}.pdf
+YYYY/MM/Client/{client-slug}/{category-slug}/{DOCUMENT-TYPE}/{guid}.pdf
 ```
 
-Version uploads are stored under the same hierarchy, inside a `versions/{document-id}` branch.
+Examples:
 
----
+```text
+2026/04/Client/contoso/contracts/CONTRACT/7f5....pdf
+2026/04/Client/keiron-claudel/prueba/PLAN-DE-ESTUDIO-PRUEBA/versions/{documentId}/{guid}.pdf
+```
 
-## ⚙️ Setup & Run
+Notes:
 
-### 1. Clone repository
+- `Client` is stored as a literal path segment
+- Client and category names are slugified in lowercase
+- Document type is slugified and stored in uppercase
+- New versions follow the same base directory and append `versions/{documentId}`
+- The version path builder still supports a fallback path strategy for older documents stored under previous layouts
+
+## Setup And Run
+
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/KeironClaudel/CloudDocs.git
 cd CloudDocs
 ```
 
-### 2. Configure application settings
+### 2. Configure Application Settings
 
 Set the required values in:
 
@@ -237,10 +264,11 @@ At minimum:
 - PostgreSQL connection string
 - JWT secret
 - Frontend base URL
+- Auth cookie settings appropriate for the environment
 - Email settings if you will use client delivery flows
-- Azure Blob settings if using `Storage:Provider = AzureBlob`
+- Azure Blob settings if using `Storage:Provider=AzureBlob`
 
-### 3. Apply migrations
+### 3. Apply Migrations
 
 ```bash
 dotnet ef database update \
@@ -248,7 +276,7 @@ dotnet ef database update \
   --startup-project CloudDocs.API
 ```
 
-### 4. Run the API
+### 4. Run The API
 
 ```bash
 dotnet run --project CloudDocs.API
@@ -266,9 +294,7 @@ Health checks are available at:
 https://localhost:xxxx/health
 ```
 
----
-
-## 🔑 Example Endpoints
+## API Surface
 
 ### Auth
 
@@ -328,6 +354,7 @@ https://localhost:xxxx/health
 
 ### Access Levels
 
+- `POST /api/access-levels`
 - `GET /api/access-levels`
 - `GET /api/access-levels/{id}`
 - `PUT /api/access-levels/{id}`
@@ -354,11 +381,9 @@ https://localhost:xxxx/health
 
 - `GET /api/audit-logs`
 
----
+## Testing
 
-## 🧪 Testing
-
-The solution includes unit tests with:
+The solution currently includes unit tests with:
 
 - xUnit
 - Moq
@@ -366,15 +391,16 @@ The solution includes unit tests with:
 
 Current test suite size:
 
-- 31 test files
-- 128 `[Fact]` test cases
+- 40 test files
+- 129 `[Fact]` test cases
 
 Coverage includes:
 
 - Authentication flows
-- Users, clients, departments, and catalogs
-- Document upload, search, versioning, visibility, and delivery
+- Users, clients, departments, categories, document types, and access levels
+- Document upload, search, versioning, visibility, and client delivery
 - Audit log queries
+- Document access and storage-path behavior
 
 Run tests with:
 
@@ -382,41 +408,37 @@ Run tests with:
 dotnet test
 ```
 
----
+## Key Design Decisions
 
-## 🧱 Key Design Decisions
-
-### ✅ Configurable catalogs
+### Configurable Catalogs
 
 Access levels and document types are stored as entities instead of hardcoded enums so they can evolve without code changes.
 
-### ✅ Visibility model
+### Visibility Model
 
-Document visibility combines access level rules with department-specific restrictions.
+Document visibility combines access-level rules with department-specific restrictions.
 
-### ✅ Paged document listing
+### Paged Document Listing
 
-`GET /api/documents` already supports `page` and `pageSize`, so frontend consumers should request the first page and paginate incrementally instead of loading the full corpus at once.
+`GET /api/documents` supports `page` and `pageSize`, so consumers should paginate incrementally instead of loading the full corpus at once.
 
-### ✅ Global exception handling
+### Global Exception Handling
 
 Errors are normalized through middleware for consistent API responses.
 
-### ✅ Pluggable storage
+### Pluggable Storage
 
 The API can run with local storage in development and Azure Blob Storage in cloud scenarios.
 
-### ✅ Streaming file pipeline
+### Streaming File Pipeline
 
 Uploads, previews, and downloads avoid loading full files into memory, which keeps the API more stable as document volume grows.
 
-### ✅ Defensive auth flow
+### Defensive Auth Flow
 
-Authentication combines lockout logic, refresh tokens, cookies, and rate limiting.
+Authentication combines lockout logic, refresh tokens, HTTP-only cookies, and rate limiting.
 
----
-
-## 📈 Future Improvements
+## Future Improvements
 
 - Integration and end-to-end API tests
 - Distributed caching
@@ -424,16 +446,12 @@ Authentication combines lockout logic, refresh tokens, cookies, and rate limitin
 - Background processing for heavier email/document workflows
 - Operational dashboards and metrics
 
----
-
-## 👨‍💻 Author
+## Author
 
 Developed by **Keiron**  
 Backend Developer focused on .NET, APIs, and Data Systems
 
----
-
-## ⭐ Final Notes
+## Final Notes
 
 This project demonstrates:
 
