@@ -8,6 +8,7 @@ namespace CloudDocs.Application.Features.Documents.SendDocumentToClient;
 public class SendDocumentToClientService : ISendDocumentToClientService
 {
     private readonly IDocumentRepository _documentRepository;
+    private readonly IDocumentVersionRepository _documentVersionRepository;
     private readonly IFileStorageService _fileStorageService;
     private readonly IEmailService _emailService;
     private readonly IAuditService _auditService;
@@ -18,6 +19,7 @@ public class SendDocumentToClientService : ISendDocumentToClientService
 
     public SendDocumentToClientService(
         IDocumentRepository documentRepository,
+        IDocumentVersionRepository documentVersionRepository,
         IUserRepository userRepository,
         IFileStorageService fileStorageService,
         IEmailService emailService,
@@ -27,6 +29,7 @@ public class SendDocumentToClientService : ISendDocumentToClientService
         IUnitOfWork unitOfWork)
     {
         _documentRepository = documentRepository;
+        _documentVersionRepository = documentVersionRepository;
         _userRepository = userRepository;
         _fileStorageService = fileStorageService;
         _emailService = emailService;
@@ -53,7 +56,21 @@ public class SendDocumentToClientService : ISendDocumentToClientService
         if (string.IsNullOrWhiteSpace(document.Client.Email))
             throw new BadRequestException("Client does not have an email configured.");
 
-        var fileStream = await _fileStorageService.GetFileAsync(document.StoragePath, cancellationToken);
+        var storagePath = document.StoragePath;
+        var attachmentFileName = $"{document.OriginalFileName}{document.FileExtension}";
+
+        if (request.VersionId.HasValue)
+        {
+            var version = await _documentVersionRepository.GetByIdAsync(request.VersionId.Value, cancellationToken);
+
+            if (version is null || version.DocumentId != documentId)
+                throw new NotFoundException("Document version not found.");
+
+            storagePath = version.StoragePath;
+            attachmentFileName = $"{document.OriginalFileName}_v{version.VersionNumber}{document.FileExtension}";
+        }
+
+        var fileStream = await _fileStorageService.GetFileAsync(storagePath, cancellationToken);
 
         if (fileStream is null)
             throw new NotFoundException("Document file not found in storage.");
@@ -85,7 +102,7 @@ public class SendDocumentToClientService : ISendDocumentToClientService
             document.Client.Email,
             subject,
             body,
-            $"{document.OriginalFileName}{document.FileExtension}",
+            attachmentFileName,
             fileStream,
             document.ContentType,
             cancellationToken);
@@ -94,9 +111,11 @@ public class SendDocumentToClientService : ISendDocumentToClientService
             currentUserId,
             "SendToClient",
             "Documents",
-            "Document",
-            document.Id.ToString(),
-            $"Document sent to client: {document.Client.Email}",
+            request.VersionId.HasValue ? "DocumentVersion" : "Document",
+            request.VersionId?.ToString() ?? document.Id.ToString(),
+            request.VersionId.HasValue
+                ? $"Document version sent to client: {document.Client.Email}"
+                : $"Document sent to client: {document.Client.Email}",
             null,
             cancellationToken);
 

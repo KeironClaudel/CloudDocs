@@ -5,4 +5,5 @@
 /// </summary>
 public sealed record SendDocumentToClientRequest(
     string? Subject,
-    string? Message);
+    string? Message,
+    Guid? VersionId = null);
