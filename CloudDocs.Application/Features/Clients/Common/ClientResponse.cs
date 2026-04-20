@@ -9,7 +9,8 @@ public sealed record ClientResponse(
     string? Phone,
     string? Notes,
     bool IsActive,
-    DateTime CreatedAt)
+    DateTime CreatedAt,
+    DateTime? UpdatedAt)
 {
     public string DisplayName =>
         string.IsNullOrWhiteSpace(Identification)

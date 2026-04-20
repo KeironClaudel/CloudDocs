@@ -70,6 +70,7 @@ public class CreateClientService : ICreateClientService
             entity.Phone,
             entity.Notes,
             entity.IsActive,
-            entity.CreatedAt);
+            entity.CreatedAt,
+            entity.UpdatedAt);
     }
 }

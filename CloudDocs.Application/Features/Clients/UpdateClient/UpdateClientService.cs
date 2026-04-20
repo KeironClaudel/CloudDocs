@@ -74,6 +74,7 @@ public class UpdateClientService : IUpdateClientService
             entity.Phone,
             entity.Notes,
             entity.IsActive,
-            entity.CreatedAt);
+            entity.CreatedAt,
+            entity.UpdatedAt);
     }
 }

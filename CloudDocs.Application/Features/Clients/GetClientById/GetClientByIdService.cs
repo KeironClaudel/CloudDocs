@@ -28,6 +28,7 @@ public class GetClientByIdService : IGetClientByIdService
             x.Phone,
             x.Notes,
             x.IsActive,
-            x.CreatedAt);
+            x.CreatedAt,
+            x.UpdatedAt);
     }
 }

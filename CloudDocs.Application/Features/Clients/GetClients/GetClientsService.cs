@@ -25,6 +25,7 @@ public class GetClientsService : IGetClientsService
             x.Phone,
             x.Notes,
             x.IsActive,
-            x.CreatedAt)).ToList();
+            x.CreatedAt,
+            x.UpdatedAt)).ToList();
     }
 }

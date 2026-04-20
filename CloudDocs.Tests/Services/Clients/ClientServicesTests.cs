@@ -160,9 +160,10 @@ public class ClientServicesTests
     public async Task GetAllAsync_ShouldMapClients_WhenClientsExist()
     {
         var createdAt = DateTime.UtcNow;
+        var updatedAt = createdAt.AddHours(2);
         _clientRepositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Client>
         {
-            new() { Id = Guid.NewGuid(), Name = "Contoso", LegalName = "Contoso Ltd", Identification = "ID-001", IsActive = true, CreatedAt = createdAt }
+            new() { Id = Guid.NewGuid(), Name = "Contoso", LegalName = "Contoso Ltd", Identification = "ID-001", IsActive = true, CreatedAt = createdAt, UpdatedAt = updatedAt }
         });
 
         var result = await CreateGetAllService().GetAllAsync();
@@ -171,6 +172,7 @@ public class ClientServicesTests
         result[0].Name.Should().Be("Contoso");
         result[0].LegalName.Should().Be("Contoso Ltd");
         result[0].DisplayName.Should().Be("Contoso - ID-001");
+        result[0].UpdatedAt.Should().Be(updatedAt);
     }
 
     [Fact]
@@ -215,5 +217,41 @@ public class ClientServicesTests
         var result = await CreateGetByIdService().GetByIdAsync(clientId);
 
         result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldReturnUpdatedAt_WhenClientIsUpdated()
+    {
+        var clientId = Guid.NewGuid();
+        var createdAt = DateTime.UtcNow.AddDays(-2);
+        var entity = new Client
+        {
+            Id = clientId,
+            Name = "Contoso",
+            Identification = "ID-1",
+            IsActive = true,
+            CreatedAt = createdAt
+        };
+
+        var request = new UpdateClientRequest("Contoso Updated", "Legal", "ID-1", "mail@test.com", "123", "note");
+
+        _clientRepositoryMock
+            .Setup(x => x.GetByIdAsync(clientId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(entity);
+
+        _clientRepositoryMock
+            .Setup(x => x.NameExistsAsync(request.Name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        _clientRepositoryMock
+            .Setup(x => x.IdentificationExistsAsync(request.Identification!, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await CreateUpdateService().UpdateAsync(clientId, request);
+
+        result.Should().NotBeNull();
+        result!.UpdatedAt.Should().NotBeNull();
+        result.CreatedAt.Should().Be(createdAt);
+        entity.UpdatedAt.Should().NotBeNull();
     }
 }
