@@ -59,8 +59,10 @@ public class AuditLogRepository : IAuditLogRepository
         if (from.HasValue)
             query = query.Where(x => x.CreatedAt >= from.Value);
 
+        // Treat the upper bound as exclusive so the caller can safely pass the
+        // start of the next day without leaking records from that day.
         if (to.HasValue)
-            query = query.Where(x => x.CreatedAt <= to.Value);
+            query = query.Where(x => x.CreatedAt < to.Value);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
