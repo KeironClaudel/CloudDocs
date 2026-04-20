@@ -6,6 +6,7 @@ using CloudDocs.Application.Features.Auth.Login;
 using CloudDocs.Domain.Entities;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using RefreshTokenEntity = CloudDocs.Domain.Entities.RefreshToken;
 
@@ -34,6 +35,7 @@ public class LoginServiceTests
             _refreshTokenRepositoryMock.Object,
             _refreshTokenGeneratorMock.Object,
             _unitOfWorkMock.Object,
+            Options.Create(new CloudDocs.Application.Common.Models.AuthCookieSettings()),
             NullLogger<LoginService>.Instance);
     }
 

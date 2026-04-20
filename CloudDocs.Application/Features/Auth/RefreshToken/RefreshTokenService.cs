@@ -2,7 +2,9 @@ using CloudDocs.Application.Common.Exceptions;
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Security;
 using CloudDocs.Application.Common.Interfaces.Services;
+using CloudDocs.Application.Common.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RefreshTokenEntity = CloudDocs.Domain.Entities.RefreshToken;
 
 namespace CloudDocs.Application.Features.Auth.RefreshToken;
@@ -18,6 +20,7 @@ public class RefreshTokenService : IRefreshTokenService
     private readonly IAuditService _auditService;
     private readonly ILogger<RefreshTokenService> _logger;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly AuthCookieSettings _authCookieSettings;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RefreshTokenService"/> class.
@@ -34,6 +37,7 @@ public class RefreshTokenService : IRefreshTokenService
         IRefreshTokenGenerator refreshTokenGenerator,
         IAuditService auditService,
         IUnitOfWork unitOfWork,
+        IOptions<AuthCookieSettings> authCookieOptions,
         ILogger<RefreshTokenService> logger)
     {
         _refreshTokenRepository = refreshTokenRepository;
@@ -41,6 +45,7 @@ public class RefreshTokenService : IRefreshTokenService
         _refreshTokenGenerator = refreshTokenGenerator;
         _auditService = auditService;
         _unitOfWork = unitOfWork;
+        _authCookieSettings = authCookieOptions.Value;
         _logger = logger;
     }
 
@@ -73,7 +78,8 @@ public class RefreshTokenService : IRefreshTokenService
             Id = Guid.NewGuid(),
             UserId = user.Id,
             Token = newRefreshTokenValue,
-            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            ExpiresAt = DateTime.UtcNow.AddDays(
+                _authCookieSettings.RefreshTokenDays > 0 ? _authCookieSettings.RefreshTokenDays : 7),
             CreatedAt = DateTime.UtcNow
         };
 

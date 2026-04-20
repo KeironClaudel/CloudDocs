@@ -7,10 +7,14 @@ namespace CloudDocs.API.Common;
 public class AuthCookieHelper
 {
     private readonly AuthCookieSettings _settings;
+    private readonly JwtSettings _jwtSettings;
 
-    public AuthCookieHelper(IOptions<AuthCookieSettings> options)
+    public AuthCookieHelper(
+        IOptions<AuthCookieSettings> options,
+        IOptions<JwtSettings> jwtOptions)
     {
         _settings = options.Value;
+        _jwtSettings = jwtOptions.Value;
     }
 
     public void SetAuthCookies(HttpResponse response, string accessToken, string refreshToken)
@@ -44,12 +48,16 @@ public class AuthCookieHelper
 
     private CookieOptions BuildAccessTokenOptions()
     {
+        var accessTokenLifetime = TimeSpan.FromMinutes(
+            _jwtSettings.ExpirationMinutes > 0 ? _jwtSettings.ExpirationMinutes : 15);
+
         return new CookieOptions
         {
             HttpOnly = true,
             Secure = _settings.Secure,
             SameSite = ParseSameSite(_settings.SameSite),
-            Expires = DateTimeOffset.UtcNow.AddMinutes(_settings.AccessTokenMinutes),
+            Expires = DateTimeOffset.UtcNow.Add(accessTokenLifetime),
+            MaxAge = accessTokenLifetime,
             IsEssential = true,
             Path = "/"
         };
@@ -57,12 +65,16 @@ public class AuthCookieHelper
 
     private CookieOptions BuildRefreshTokenOptions()
     {
+        var refreshTokenLifetime = TimeSpan.FromDays(
+            _settings.RefreshTokenDays > 0 ? _settings.RefreshTokenDays : 7);
+
         return new CookieOptions
         {
             HttpOnly = true,
             Secure = _settings.Secure,
             SameSite = ParseSameSite(_settings.SameSite),
-            Expires = DateTimeOffset.UtcNow.AddDays(_settings.RefreshTokenDays),
+            Expires = DateTimeOffset.UtcNow.Add(refreshTokenLifetime),
+            MaxAge = refreshTokenLifetime,
             IsEssential = true,
             Path = "/api/auth"
         };

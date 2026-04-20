@@ -1,9 +1,11 @@
 using CloudDocs.Application.Common.Interfaces.Persistence;
 using CloudDocs.Application.Common.Interfaces.Security;
 using CloudDocs.Application.Common.Interfaces.Services;
-using RefreshTokenEntity = CloudDocs.Domain.Entities.RefreshToken;
 using CloudDocs.Application.Common.Exceptions;
+using CloudDocs.Application.Common.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using RefreshTokenEntity = CloudDocs.Domain.Entities.RefreshToken;
 
 namespace CloudDocs.Application.Features.Auth.Login;
 
@@ -20,6 +22,7 @@ public class LoginService : ILoginService
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<LoginService> _logger;
+    private readonly AuthCookieSettings _authCookieSettings;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LoginService"/> class.
@@ -40,6 +43,7 @@ public class LoginService : ILoginService
     IRefreshTokenRepository refreshTokenRepository,
     IRefreshTokenGenerator refreshTokenGenerator,
     IUnitOfWork unitOfWork,
+    IOptions<AuthCookieSettings> authCookieOptions,
     ILogger<LoginService> logger)
     {
         _userRepository = userRepository;
@@ -49,6 +53,7 @@ public class LoginService : ILoginService
         _refreshTokenRepository = refreshTokenRepository;
         _refreshTokenGenerator = refreshTokenGenerator;
         _unitOfWork = unitOfWork;
+        _authCookieSettings = authCookieOptions.Value;
         _logger = logger;
     }
 
@@ -173,7 +178,8 @@ public class LoginService : ILoginService
             Id = Guid.NewGuid(),
             UserId = user.Id,
             Token = refreshTokenValue,
-            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            ExpiresAt = DateTime.UtcNow.AddDays(
+                _authCookieSettings.RefreshTokenDays > 0 ? _authCookieSettings.RefreshTokenDays : 7),
             CreatedAt = DateTime.UtcNow
         };
 

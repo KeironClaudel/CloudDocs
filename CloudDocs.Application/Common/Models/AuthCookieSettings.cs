@@ -11,5 +11,5 @@ public class AuthCookieSettings
     public int RefreshTokenDays { get; set; } = 7;
 
     public bool Secure { get; set; } = true;
-    public string SameSite { get; set; } = "Lax"; // Lax | Strict | None
+    public string SameSite { get; set; } = "None"; // Lax | Strict | None
 }
